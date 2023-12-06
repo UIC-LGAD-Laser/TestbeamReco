@@ -37,8 +37,8 @@ void Analyze::InitHistos(NTupleReader& tr, const std::vector<std::vector<int>>& 
     double yBinSizePad = 0.5;
 
     int timeDiffNbin = 200; // 200
-    double timeDiffLow = -1.0;//40.0;//
-    double timeDiffHigh = 1.0;//50.0;//
+    double timeDiffLow = 40.0;//-1.0;//
+    double timeDiffHigh = 50.0;//1.0;//
     int timeDiffYnbin = 50;
 
     int    bvNbin = 500;

@@ -290,6 +290,7 @@ sensorsGeom2023 = { "BNL_50um_1cm_450um_W3051_2_2": {'sensor': "BNL_50um_1cm_450
 
                     "HPK_W4_17_2_220V_86attn": {'sensor': "HPK_W4_17_2_220V_86attn", 'pitch': 500, 'stripWidth': 50, "BV": 220, "length": 6.0},
                     "HPK_W4_17_2_223V_92P3attn": {'sensor': "HPK_W4_17_2_223V_92P3attn", 'pitch': 500, 'stripWidth': 50, "BV": 223, "length": 6.0},
+                    "Hannah_W4_17_2_223V_92P3attn": {'sensor': "Hannah_W4_17_2_223V_92P3attn", 'pitch': 500, 'stripWidth': 50, "BV": 223, "length": 1.3},
                     "HPK_W4_17_2_NewCable_223V_92P3attn": {'sensor': "HPK_W4_17_2_NewCable_223V_92P3attn", 'pitch': 500, 'stripWidth': 50, "BV": 223, "length": 6.0},
                     "HPK_W4_17_2_224V_94attn": {'sensor': "HPK_W4_17_2_224V_94attn", 'pitch': 500, 'stripWidth': 50, "BV": 224, "length": 6.0},
                     # Noise scan
@@ -512,6 +513,10 @@ resolutions2023 = {
                                         'position_twoStrip'  : 0.00, 'position_twoStrip_E': 0.00,
                                         'efficiency_oneStrip': 0.00, 'efficiency_twoStrip' : 0.00},
     "HPK_W4_17_2_223V_92P3attn": {'position_oneStrip'  : 0.00, 'position_oneStrip_E': 0.00, 'position_oneStripRMS': 0.00,
+                                        'position_oneStrip_StdDev': 0.00,
+                                        'position_twoStrip'  : 0.00, 'position_twoStrip_E': 0.00,
+                                        'efficiency_oneStrip': 0.00, 'efficiency_twoStrip' : 0.00},
+    "Hannah_W4_17_2_223V_92P3attn": {'position_oneStrip'  : 0.00, 'position_oneStrip_E': 0.00, 'position_oneStripRMS': 0.00,
                                         'position_oneStrip_StdDev': 0.00,
                                         'position_twoStrip'  : 0.00, 'position_twoStrip_E': 0.00,
                                         'efficiency_oneStrip': 0.00, 'efficiency_twoStrip' : 0.00},
@@ -756,6 +761,8 @@ resolutions2023OneStripChannel = {
 "HPK_W4_17_2_220V_86attn": {   'resOneStrip': [-1.00, -1.00, -1.00, -1.00, -1.00, -1.00, -1.00],  ## Std Dev
                                                 'errOneStrip': [ 1.00,  1.00,  1.00,  1.00,  1.00,  1.00,  1.00]},
 "HPK_W4_17_2_223V_92P3attn": {   'resOneStrip': [-1.00, -1.00, -1.00, -1.00, -1.00, -1.00, -1.00],  ## Std Dev
+                                                'errOneStrip': [ 1.00,  1.00,  1.00,  1.00,  1.00,  1.00,  1.00]},
+"Hannah_W4_17_2_223V_92P3attn": {   'resOneStrip': [-1.00, -1.00, -1.00, -1.00, -1.00, -1.00, -1.00],  ## Std Dev
                                                 'errOneStrip': [ 1.00,  1.00,  1.00,  1.00,  1.00,  1.00,  1.00]},
 "HPK_W4_17_2_NewCable_223V_92P3attn": {   'resOneStrip': [-1.00, -1.00, -1.00, -1.00, -1.00, -1.00, -1.00],  ## Std Dev
                                                 'errOneStrip': [ 1.00,  1.00,  1.00,  1.00,  1.00,  1.00,  1.00]},

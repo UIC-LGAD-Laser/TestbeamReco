@@ -378,6 +378,60 @@ public:
 };
 
 
+class Hannah_W4_17_2_223V_92P3attn_StripsGeometry : public DefaultGeometry
+{
+public:
+    // 
+    // Used lecroy scope channels 0-7
+    // Scope channel 0-6 was AC channels, and scope channel 7 was the photek
+    // 
+    // |-----------|             -----
+    // | 0 0 0 0 0 |             |777|
+    // | 1 1 1 1 1 |             |777|
+    // | 2 2 2 2 2 |             -----
+    // | 3 3 3 3 3 |
+    // | 4 4 4 4 4 |
+    // | 5 5 5 5 5 |
+    // | 6 6 6 6 6 |
+    // |-----------|
+
+    Hannah_W4_17_2_223V_92P3attn_StripsGeometry(const int v=0) : voltage(v){}
+    const int voltage;
+    std::map<int, std::vector<int>> indexToGeometryMap = {{0,{0,0}}, {1,{0,1}}, {2,{0,2}}, {3,{1,0}}};   
+    std::vector<std::vector<int>> geometry = {{0,1,2},{3}};
+    std::map<int, bool> acLGADChannelMap = {{0,true}, {1,true}, {2,true}, {3,false}};
+    std::map<int, double> amplitudeCorrectionFactor = {{0,1.0}, {1,1.0}, {2,1.0},{3,1.0}};
+    // std::map<int, double> timeCalibrationCorrection = {{0,-44.407430}, {1,-44.516147}, {2,-43.758894}, {3,0.0}};
+    std::map<int, double> timeCalibrationCorrection = {{0,0.0}, {1,0.0}, {2,0.0}, {3,0.0}};
+    double stripWidth = 0.050;
+    double pitch = 0.500;
+    std::vector<double> stripCenterXPosition = {0.5, 0.0, -0.5, 0.0}; // Iter3
+    int numLGADchannels = 3;
+    int lowGoodStripIndex = 0;
+    int highGoodStripIndex = 2;
+    double xBinSize = 0.05;
+    double yBinSize = 0.1;
+    double xmin = -0.80-xBinSize/2; // Sensor's local frame
+    double xmax =  0.80+xBinSize/2; // Sensor's local frame
+    double ymin = -0.8; // Sensor's local frame
+    double ymax = 0.8; // Sensor's local frame
+    double positionRecoMaxPoint = 0.66;
+    double noiseAmpThreshold  = 15.0;
+    double signalAmpThreshold = 15.0;
+    bool enablePositionReconstruction = true;
+    int CFD_threshold = 50;
+    std::vector<double> positionRecoPar = {0.250000, -1.282863, -2.157824, 74.391135, -836.971302, 2942.375710};
+    std::vector<std::vector<double>> sensorEdges = {{-0.7, -2.9}, {0.7, 2.9}}; // Sensor's local frame
+    std::vector<std::vector<double>> sensorEdgesTight = {{stripCenterXPosition[highGoodStripIndex], -2.9}, {stripCenterXPosition[lowGoodStripIndex], 2.9}}; // Sensor's local frame
+    double offset = stripWidth;
+    int centerGoodStripIndex = 1;
+    double centerStripX = stripCenterXPosition[centerGoodStripIndex];
+    double leftGapX = centerStripX - (pitch/2);
+	double rightGapX = centerStripX + (pitch/2);
+	std::vector<utility::ROI> regionsOfIntrest = {{"nearStripX", centerStripX + offset - stripWidth/2, centerStripX + offset + stripWidth/2, -2.5,2.5}, {"leftGapX", leftGapX - stripWidth/2, leftGapX + stripWidth/2, -2.5,2.5}, {"rightGapX", rightGapX - stripWidth/2, rightGapX + stripWidth/2, -2.5,2.5}};
+};
+
+
 class HPK_W4_17_2_NewCable_223V_92P3attn_StripsGeometry : public DefaultGeometry
 {
 public:

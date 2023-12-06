@@ -1,8 +1,6 @@
 # Variables set by configure 
 FASTJET_DIR = 
 FASTJETLIBS = 
-# CXX      = /cvmfs/sft.cern.ch/lcg/releases/gcc/8.3.0-cebb0/x86_64-centos7/bin/g++
-# LD       = /cvmfs/sft.cern.ch/lcg/releases/gcc/8.3.0-cebb0/x86_64-centos7/bin/g++
 CXX      = /usr/bin/g++
 LD       = /usr/bin/g++
 CXXFLAGS = -g -O2 --std=c++11

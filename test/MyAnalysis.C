@@ -19,8 +19,10 @@
 #include <iostream>
 #include <getopt.h>
 #include <string>
+#include <sstream>
 #include <functional>
 #include <unistd.h>
+
 
 const std::string getFullPath(const std::string& file)
 {
@@ -148,7 +150,8 @@ int main(int argc, char *argv[])
         outpath=outDir.Data();
        
         char thistFile[128];
-        sprintf(thistFile, "%s%s_%s.root", outDir.Data(),dataSets.c_str(), analyzer.c_str());
+        // snprintf(thistFile, "%s%s_%s.root", outDir.Data(),dataSets.c_str(), analyzer.c_str());
+        snprintf(thistFile, sizeof(thistFile), "%s%s_%s.root", outDir.Data(), dataSets.c_str(), analyzer.c_str());
         
         histFile = thistFile;
     }
@@ -156,7 +159,8 @@ int main(int argc, char *argv[])
     if(runOnCondor)
     {
         char thistFile[128];
-        sprintf(thistFile, "MyAnalysis_%s_%d.root", dataSets.c_str(), startFile);
+        // snprintf(thistFile, "MyAnalysis_%s_%d.root", dataSets.c_str(), startFile);
+        snprintf(thistFile, sizeof(thistFile), "MyAnalysis_%s_%d.root", dataSets.c_str(), startFile);
         histFile = thistFile;
     }
 
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
         {
             std::cout << utility::color("ERROR: The analyzer \"" + analyzer + "\" is not an analyzer option! Please add it to the MyAnalysis.C list.", "red") << std::endl;        
         }
-        outfile->Close();
+        outfile->Close();    
     }
     catch(const std::string e)
     {

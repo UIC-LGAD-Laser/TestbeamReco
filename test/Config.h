@@ -230,6 +230,7 @@ public:
         else if(filetag.find("HPK_W5_17_2_207V_94P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_94P5attn_StripsGeometry(voltage));
         else if(filetag.find("HPK_W4_17_2_220V_86attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_220V_86attn_StripsGeometry(voltage));
         else if(filetag.find("HPK_W4_17_2_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_223V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("Hannah_W4_17_2_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, Hannah_W4_17_2_223V_92P3attn_StripsGeometry(voltage));
         else if(filetag.find("HPK_W4_17_2_NewCable_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_NewCable_223V_92P3attn_StripsGeometry(voltage));
         else if(filetag.find("HPK_W4_17_2_224V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_224V_94attn_StripsGeometry(voltage));
         // Noise scan

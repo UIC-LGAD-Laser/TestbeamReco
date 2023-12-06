@@ -8,7 +8,7 @@ if [ "x$SOURCE" = "x" ]; then
 fi
 thisdir=$(cd "$(dirname "${SOURCE}")"; pwd)
 # Note: readlink -f is not working on OSX
-thisdir=$(python -c "import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))" ${thisdir})
+thisdir=$(python3 -c "import os,sys; print(os.path.realpath(os.path.expanduser(sys.argv[1])))" ${thisdir})
 
 #  First the compiler
 # if [ "$COMPILER" != "native" ] && [ -e /cvmfs/sft.cern.ch/lcg/releases/gcc/8.3.0/x86_64-centos7/setup.sh ]; then
@@ -40,7 +40,7 @@ fi
 if [ -x ${thisdir}/bin/python ]; then
   PYTHON_VERSION=`expr $(readlink ${thisdir}/bin/python) : '.*/Python/\([0-9].[0-9]\).*'`
 else
-  PYTHON_VERSION=`python -c "import sys; print('{0}.{1}'.format(*sys.version_info))"`
+  PYTHON_VERSION=`python3 -c "import sys; print('{0}.{1}'.format(*sys.version_info))"`
 fi
 PY_PATHS=${thisdir}/lib/python$PYTHON_VERSION/site-packages
 
