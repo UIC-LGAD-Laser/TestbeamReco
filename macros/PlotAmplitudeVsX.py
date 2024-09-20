@@ -74,6 +74,10 @@ canvas = TCanvas("cv","cv",1000,800)
 maxAmpChannels = []
 maxAmpALL = 0
 n_channels = 0
+midgap_bins = [list_amplitude_vs_x[1].FindBin(-0.25)]
+
+amplitude_distrib = TFile("%sMidGapAmp_distribution.root"%(outdir),"RECREATE")
+
 #loop over X,Y bins
 for channel in range(0, len(list_amplitude_vs_x)):
     # print("Channel : " + str(channel))
@@ -81,6 +85,7 @@ for channel in range(0, len(list_amplitude_vs_x)):
     totalEvents = list_th2_amplitude_vs_x[channel].GetEntries()
     for i in range(1, list_amplitude_vs_x[channel].GetXaxis().GetNbins()+1):
         tmpHist = list_th2_amplitude_vs_x[channel].ProjectionY("py",i,i)
+        tmpHist.GetXaxis().SetRangeUser(0,200)
         myMean = tmpHist.GetMean()
         myRMS = tmpHist.GetRMS()
         value = myMean            
@@ -106,12 +111,17 @@ for channel in range(0, len(list_amplitude_vs_x)):
             tmpHist.Draw("hist")
             gaussian.Draw("same")
             canvas.SaveAs(outdirTmp+"q_"+str(i)+"_"+str(channel)+".gif")
+            if(i in midgap_bins and channel==1):
+                tmpHist.GetXaxis().SetRangeUser(0,200)
+                tmpHist.Write()
+                gaussian.Write()
         else:
             value = 0.0
 
         value = value if(value>0.0) else 0.0
         list_amplitude_vs_x[channel].SetBinContent(i,value)
                     
+amplitude_distrib.Close()
 # Save amplitude histograms
 outputfile = TFile("%sPlotAmplitudeVsX.root"%(outdir),"RECREATE")
 # for channel in range(0, len(list_amplitude_vs_x)):
