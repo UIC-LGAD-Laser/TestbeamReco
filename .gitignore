@@ -26,7 +26,7 @@
 #other data files
 **.csv
 **.pkl
-**.cfg
+#**.cfg
 **.status
 
 #MVA model files 
