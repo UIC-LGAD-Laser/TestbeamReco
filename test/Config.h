@@ -1,0 +1,364 @@
+#ifndef Confg_h
+#define Confg_h
+
+#include "TestbeamReco/interface/NTupleReader.h"
+#include "TestbeamReco/interface/Geometry.h"
+#include "TestbeamReco/interface/Geometry2023.h"
+#include "TestbeamReco/interface/Geometry2022.h"
+#include "TestbeamReco/interface/PrepNTupleVars.h"
+#include "TestbeamReco/interface/SignalProperties.h"
+#include "TestbeamReco/interface/SpatialReconstruction.h"
+#include "TestbeamReco/interface/Timing.h"
+#include "TestbeamReco/interface/Utility.h"
+
+#include <iostream>
+#include <fstream>
+
+class Config
+{
+private:
+    void registerModules(NTupleReader& tr, const std::vector<std::string>&& modules) const
+    {
+        const auto& outpath = tr.getVar<std::string>("outpath");
+        
+        std::vector<std::string> delayHistos;
+        for(uint ichan=0; ichan < tr.getVec<float>("amp").size(); ichan++)
+        {
+            delayHistos.emplace_back(Form("timeDiff_coarse_vs_xy_channel0%i_pyx",ichan));
+        }  
+        const auto& delayHistoVec = utility::getHistoFromROOT<TProfile2D>(outpath+"/delayCorrections.root", delayHistos);
+        
+        //1D histogram of 2D delay correction
+        std::vector<std::shared_ptr<TProfile>> delayHistos1DVec;
+        for(uint ichan=0; ichan < delayHistoVec.size(); ichan++)
+        {
+            delayHistos1DVec.emplace_back((TProfile*)delayHistoVec[ichan]->ProfileX());
+        }
+
+        for(const auto& module : modules)
+        {
+            if     (module=="PrepNTupleVars")          tr.emplaceModule<PrepNTupleVars>(delayHistoVec);
+            else if(module=="SignalProperties")        tr.emplaceModule<SignalProperties>();
+            else if(module=="SpatialReconstruction")   tr.emplaceModule<SpatialReconstruction>( utility::getHistoFromROOT<TProfile2D>(outpath+"/yRecoHistos.root", "y_vs_Amp1OverAmp1and2_deltaT_prof"), delayHistoVec, delayHistos1DVec);
+            else if(module=="Timing")                  tr.emplaceModule<Timing>();
+        }
+    }
+
+    template<typename T> void registerGeometry(NTupleReader& tr, const T& g) const
+    {
+        tr.registerDerivedVar("indexToGeometryMap", g.indexToGeometryMap);
+        tr.registerDerivedVar("geometry", g.geometry);
+        tr.registerDerivedVar("acLGADChannelMap", g.acLGADChannelMap);
+        tr.registerDerivedVar("numLGADchannels", g.numLGADchannels);
+        tr.registerDerivedVar("amplitudeCorrectionFactor", g.amplitudeCorrectionFactor);
+        tr.registerDerivedVar("stripWidth",g.stripWidth);
+        tr.registerDerivedVar("sensorCenter",g.sensorCenter); 
+        tr.registerDerivedVar("sensorCenterY",g.sensorCenterY); 
+        tr.registerDerivedVar("pitch",g.pitch); 
+        tr.registerDerivedVar("stripCenterXPosition", g.stripCenterXPosition);
+        tr.registerDerivedVar("stripCenterYPosition", g.stripCenterYPosition);
+        tr.registerDerivedVar("timeCalibrationCorrection", g.timeCalibrationCorrection);
+        tr.registerDerivedVar("extraChannelIndex", g.extraChannelIndex);
+        tr.registerDerivedVar("photekIndex", g.photekIndex);
+        tr.registerDerivedVar("lowGoodStripIndex", g.lowGoodStripIndex);
+        tr.registerDerivedVar("highGoodStripIndex", g.highGoodStripIndex);
+        tr.registerDerivedVar("CFD_threshold", g.CFD_threshold);
+        tr.registerDerivedVar("CFD_list", g.CFD_list);
+        tr.registerDerivedVar("sensorEdges", g.sensorEdges);
+        tr.registerDerivedVar("sensorEdgesTight", g.sensorEdgesTight);
+        tr.registerDerivedVar("sensorEdgesExtra", g.sensorEdgesExtra);
+        tr.registerDerivedVar("xBinSize", g.xBinSize);
+        tr.registerDerivedVar("yBinSize", g.yBinSize);
+        tr.registerDerivedVar("xBinSize_delay_corr", g.xBinSize_delay_corr);
+        tr.registerDerivedVar("yBinSize_delay_corr", g.yBinSize_delay_corr);
+        tr.registerDerivedVar("xmin", g.xmin);
+        tr.registerDerivedVar("xmax", g.xmax);
+        tr.registerDerivedVar("ymin", g.ymin);
+        tr.registerDerivedVar("ymax", g.ymax);
+        tr.registerDerivedVar("positionRecoMaxPoint", g.positionRecoMaxPoint);
+        tr.registerDerivedVar("photekSignalThreshold", g.photekSignalThreshold);
+        tr.registerDerivedVar("photekSignalMax", g.photekSignalMax);
+        tr.registerDerivedVar("noiseAmpThreshold", g.noiseAmpThreshold);
+        tr.registerDerivedVar("signalAmpThreshold", g.signalAmpThreshold);
+        tr.registerDerivedVar("isPadSensor", g.isPadSensor);
+        tr.registerDerivedVar("isHPKStrips", g.isHPKStrips);
+        tr.registerDerivedVar("enablePositionReconstruction", g.enablePositionReconstruction);
+        tr.registerDerivedVar("enablePositionReconstructionPad", g.enablePositionReconstructionPad);
+        tr.registerDerivedVar("uses2022Pix", g.uses2022Pix);
+        tr.registerDerivedVar("isHorizontal", g.isHorizontal);
+        tr.registerDerivedVar("minPixHits", g.minPixHits);
+        tr.registerDerivedVar("minStripHits", g.minStripHits);
+        tr.registerDerivedVar("positionRecoPar", g.positionRecoPar);
+        tr.registerDerivedVar("positionRecoParRight", g.positionRecoParRight);
+        tr.registerDerivedVar("positionRecoParLeft", g.positionRecoParLeft);
+        tr.registerDerivedVar("positionRecoParTop", g.positionRecoParTop);
+        tr.registerDerivedVar("positionRecoParBot", g.positionRecoParBot);
+        tr.registerDerivedVar("xSlices", g.xSlices);
+        tr.registerDerivedVar("ySlices", g.ySlices);
+        tr.registerDerivedVar("boxes_XY", g.boxes_XY);
+        tr.registerDerivedVar("regionsOfIntrest", g.regionsOfIntrest);
+    }
+
+    int getVoltage(std::string name) const
+    {
+        std::vector<std::string> stringChunks;
+        bool keepGoing = true;
+        while(keepGoing)
+        {
+            const auto& first = utility::split("first", name, "_");
+            const auto& last = utility::split("last", name, "_");
+            stringChunks.emplace_back(first);
+            if(last == "" || last == name)
+            {
+                keepGoing = false;
+            }
+            else 
+            {
+                name = last;
+            }
+        }
+
+        std::string sVoltage;
+        for(auto c : stringChunks)
+        {
+            sVoltage = utility::split("first", c, "V");
+            if(sVoltage != c) break;
+        }
+
+        return std::stoi(sVoltage);;
+    }
+
+public:
+    Config() 
+    {
+    }
+
+    void setUp(NTupleReader& tr) const
+    {
+        //Get and make needed info
+        const auto& filetag = tr.getVar<std::string>("filetag");
+        const auto& analyzer = tr.getVar<std::string>("analyzer");
+        const auto& firstFile = tr.getVar<bool>("firstFile");
+        const auto& outpath = tr.getVar<std::string>("outpath");
+
+        std::string runYear = "2021";
+        tr.registerDerivedVar("runYear",runYear);
+        
+        //Define zScan values and save to a python file for later
+        const auto voltage = getVoltage(filetag);
+        tr.registerDerivedVar("voltage", voltage);
+        std::cout<<"Voltage: "<<voltage<<std::endl;
+
+        //Setup Sensor Geometry 
+        if     (filetag.find("BNL2020")                                != std::string::npos) registerGeometry(tr, BNL2020Geometry(voltage));
+        else if(filetag.find("BNL2021_wide")                           != std::string::npos) registerGeometry(tr, BNL2021WideGeometry(voltage));
+        else if(filetag.find("BNL2021_medium")                         != std::string::npos) registerGeometry(tr, BNL2021MediumGeometry(voltage));
+        else if(filetag.find("BNL2021_narrow")                         != std::string::npos) registerGeometry(tr, BNL2021NarrowGeometry(voltage));
+        else if(filetag.find("HPK_pad_C2")                             != std::string::npos) registerGeometry(tr, HPKPadC2Geometry(voltage));
+        else if(filetag.find("HPK_pad_B2")                             != std::string::npos) registerGeometry(tr, HPKPadB2Geometry(voltage));
+        else if(filetag.find("HPK_strips_C2_45um")                     != std::string::npos) registerGeometry(tr, HPKStripsC2WideMetalGeometry(voltage));
+        else if(filetag.find("HPK_strips_C2_30um")                     != std::string::npos) registerGeometry(tr, HPKStripsC2NarrowMetalGeometry(voltage));
+        else if(filetag.find("Ron_wide")                               != std::string::npos) registerGeometry(tr, RonStripsGeometry(voltage));
+        else if(filetag.find("BNL2021_hexpix")                         != std::string::npos) registerGeometry(tr, BNLPixelHexGeometry(voltage));
+        else if(filetag.find("HPK2_DCLGAD_220V")                       != std::string::npos) registerGeometry(tr, HPK2DCLGADGeometry(voltage));
+        // 2022 Campaign
+        else if(filetag.find("EIC_W2_1cm_500up_300uw")                 != std::string::npos) registerGeometry(tr, EIC_W2_1cm_500um_200um_gap_StripsGeometry(voltage));
+        else if(filetag.find("EIC_W1_1cm_500up_200uw")                 != std::string::npos) registerGeometry(tr, EIC1cmStripsGeometry(voltage));
+        else if(filetag.find("EIC_W2_1cm_500up_100uw")                 != std::string::npos) registerGeometry(tr, EIC_W2_1cm_500um_400um_gap_StripsGeometry(voltage));
+        else if(filetag.find("EIC_W1_1cm_100up_50uw")                  != std::string::npos) registerGeometry(tr, EIC1cmStrips100Geometry(voltage));
+        else if(filetag.find("EIC_W1_1cm_200up_100uw")                 != std::string::npos) registerGeometry(tr, EIC1cmStrips200Geometry(voltage));
+        else if(filetag.find("EIC_W1_1cm_300up_150uw")                 != std::string::npos) registerGeometry(tr, EIC1cmStrips300Geometry(voltage));
+        else if(filetag.find("EIC_W1_UCSC_2p5cm_500up_200uw")          != std::string::npos) registerGeometry(tr, EIC2p5cmStripsUCSCGeometry(voltage));
+        else if(filetag.find("EIC_W1_2p5cm_500up_200uw")               != std::string::npos) registerGeometry(tr, EIC2p5cmStripsGeometry(voltage));
+        else if(filetag.find("HPK_Eb_1cm_80up_45uw")                   != std::string::npos) registerGeometry(tr, HPKStripsEbWideMetalGeometry(voltage));
+        else if(filetag.find("EIC_W1_0p5cm_500up_200uw_1_7")           != std::string::npos) registerGeometry(tr, EIC_W1_0p5cm_500um_300um_gap_1_7_StripsGeometry(voltage));
+        else if(filetag.find("EIC_W1_0p5cm_500up_200uw_1_4")           != std::string::npos) registerGeometry(tr, EIC_W1_0p5cm_500um_300um_gap_1_4_StripsGeometry(voltage));
+        else if(filetag.find("BNL_500um_squares_175V")                 != std::string::npos) registerGeometry(tr, BNL_500um_squares_Geometry(voltage));
+        else if(filetag.find("BNL2021_22_medium_150up_80uw")           != std::string::npos) registerGeometry(tr, BNL2021MediumV2Geometry(voltage));
+        else if(filetag.find("IHEP_W1_I_150up_80uw")                   != std::string::npos) registerGeometry(tr, IHEPGeometry(voltage));
+        // 2023 Campaign
+        else if(filetag.find("BNL_50um_1cm_450um_W3051_2_2")                 != std::string::npos) registerGeometry(tr, BNL_50um_1cm_450um_W3051_2_2_StripsGeometry(voltage));
+		else if(filetag.find("BNL_50um_1cm_400um_W3051_1_4")                 != std::string::npos) registerGeometry(tr, BNL_50um_1cm_400um_W3051_1_4_StripsGeometry(voltage));
+		else if(filetag.find("BNL_50um_1cm_450um_W3052_2_4")                 != std::string::npos) registerGeometry(tr, BNL_50um_1cm_450um_W3052_2_4_StripsGeometry(voltage)); 
+		else if(filetag.find("BNL_20um_1cm_400um_W3074_1_4")                 != std::string::npos) registerGeometry(tr, BNL_20um_1cm_400um_W3074_1_4_StripsGeometry(voltage));
+		else if(filetag.find("BNL_20um_1cm_400um_W3075_1_2")                 != std::string::npos) registerGeometry(tr, BNL_20um_1cm_400um_W3075_1_2_StripsGeometry(voltage));
+		else if(filetag.find("BNL_20um_1cm_450um_W3074_2_1")                 != std::string::npos) registerGeometry(tr, BNL_20um_1cm_450um_W3074_2_1_StripsGeometry(voltage));
+		else if(filetag.find("BNL_20um_1cm_450um_W3075_2_4")                 != std::string::npos) registerGeometry(tr, BNL_20um_1cm_450um_W3075_2_4_StripsGeometry(voltage));
+		else if(filetag.find("BNL_50um_2p5cm_mixConfig1_W3051_1_4")          != std::string::npos) registerGeometry(tr, BNL_50um_2p5cm_mixConfig1_W3051_1_4_StripsGeometry(voltage));
+		else if(filetag.find("BNL_50um_2p5cm_mixConfig2_W3051_1_4")          != std::string::npos) registerGeometry(tr, BNL_50um_2p5cm_mixConfig2_W3051_1_4_StripsGeometry(voltage));
+		else if(filetag.find("CFD_spy")                                      != std::string::npos) registerGeometry(tr, CFD(voltage));
+		else if(filetag.find("CFD_noSpy")                                    != std::string::npos) registerGeometry(tr, CFD(voltage));
+	    else if(filetag.find("HPK_20um_500x500um_2x2pad_E600_FNAL")          != std::string::npos) registerGeometry(tr, HPK_20um_500x500um_E600_2x2PadGeometry(voltage));
+	    else if(filetag.find("HPK_30um_500x500um_2x2pad_E600_FNAL")          != std::string::npos) registerGeometry(tr, HPK_30um_500x500um_E600_2x2PadGeometry(voltage));
+	    else if(filetag.find("HPK_50um_500x500um_2x2pad_E600_FNAL")          != std::string::npos) registerGeometry(tr, HPK_50um_500x500um_E600_2x2PadGeometry(voltage));
+        
+        //HPK - Laser Scans
+
+        else if(filetag.find("HPK_W5_17_2_201V_91P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_91P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_92attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_92attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_92P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_92P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_93attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_93attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_93P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_93P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_94attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_201V_94P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_201V_94P5attn_StripsGeometry(voltage));
+
+        else if(filetag.find("HPK_W5_17_2_203V_91P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_91P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_92attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_92attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_92P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_92P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_93attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_93attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_93P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_93P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_94attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_203V_94P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_203V_94P5attn_StripsGeometry(voltage));
+        
+        else if(filetag.find("HPK_W5_17_2_205V_91P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_91P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_92attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_92attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_92P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_92P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_93attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_93attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_93P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_93P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_94attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_205V_94P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_94P5attn_StripsGeometry(voltage));
+        // else if(filetag.find("HPK_W5_17_2_205V_93P5attn_fine2DScan")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_205V_93P5attn_fine2DScan_StripsGeometry(voltage));
+
+        else if(filetag.find("HPK_W5_17_2_207V_91P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_91P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_92attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_92attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_92P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_92P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_93attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_93attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_93P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_93P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_94attn_StripsGeometry(voltage));
+        // else if(filetag.find("HPK_W5_17_2_207V_94attn_run2")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_94attn_run2_StripsGeometry(voltage));
+        // else if(filetag.find("HPK_W5_17_2_207V_94attn_run2_65scale")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_94attn_run2_65scale_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W5_17_2_207V_94P5attn")                                 != std::string::npos) registerGeometry(tr, HPK_W5_17_2_207V_94P5attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_220V_86attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_220V_86attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_223V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_NewCable_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_NewCable_223V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_224V_94attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_224V_94attn_StripsGeometry(voltage));
+        // Noise scan
+        else if(filetag.find("HPK_W4_17_2_217V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_217V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_218V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_218V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_219V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_219V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_220V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_220V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_221V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_221V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_222V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_222V_92P3attn_StripsGeometry(voltage));
+        // else if(filetag.find("run2_HPK_W4_17_2_223V_92P3attn")                                 != std::string::npos) registerGeometry(tr, run2_HPK_W4_17_2_223V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_224V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_224V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_225V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_225V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_226V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_226V_92P3attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W4_17_2_227V_92P3attn")                                 != std::string::npos) registerGeometry(tr, HPK_W4_17_2_227V_92P3attn_StripsGeometry(voltage));
+        
+        else if(filetag.find("HPK_W9_14_2_120V_85P4attn")                                 != std::string::npos) registerGeometry(tr, HPK_W9_14_2_120V_85P4attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_85P4attn")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_85P4attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_5_117V_85P4attn")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_5_117V_85P4attn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_5_117V_oldAttn")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_5_117V_oldAttn_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_120V_oldAttn")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_120V_oldAttn_StripsGeometry(voltage));
+
+        //Risetime vs amp study
+        else if(filetag.find("HPK_W9_15_2_121V_74attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_74attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_75attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_75attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_76attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_76attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_77attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_77attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_78attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_78attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_79attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_79attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_80attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_80attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_81attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_81attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_82attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_82attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_82P5attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_82P5attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_83attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_83attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_83P5attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_83P5attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_84attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_84attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_84P5attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_84P5attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_85attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_85attn_rtStudy_StripsGeometry(voltage));
+        // else if(filetag.find("HPK_W9_15_2_121V_85P4attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_85P4attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_86attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_86attn_rtStudy_StripsGeometry(voltage));
+        else if(filetag.find("HPK_W9_15_2_121V_86P5attn_rtStudy")                                 != std::string::npos) registerGeometry(tr, HPK_W9_15_2_121V_86P5attn_rtStudy_StripsGeometry(voltage));
+
+        else if(filetag.find("LeCroy_debug_W2_3_2_198V_99P9attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_debug_W2_3_2_198V_99P9attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy_W2_3_2_198V_99P9attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_W2_3_2_198V_99P9attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy_W4_17_2_222V_91P0attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_W4_17_2_222V_91P0attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy1GHzTrig_W4_17_2_222V_91P0attn")                                 != std::string::npos) registerGeometry(tr, LeCroy1GHzTrig_W4_17_2_222V_91P0attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy_trigLineFit_W4_17_2_222V_99P9attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_trigLineFit_W4_17_2_222V_99P9attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy_W4_17_2_222V_99P9attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_W4_17_2_222V_99P9attn_StripsGeometry(voltage));
+        else if(filetag.find("LeCroy_W9_15_2_121V_92P3attn")                                 != std::string::npos) registerGeometry(tr, LeCroy_W9_15_2_121V_92P3attn_StripsGeometry(voltage));
+
+		else
+        {
+            registerGeometry(tr, DefaultGeometry(voltage));
+            std::cout<<"Warning: Using DefaultGeometry, odds are this is not what you want"<<std::endl;
+        }
+
+
+        //Register Modules that are needed for each Analyzer
+        if (analyzer=="Analyze")
+        {
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+        else if (analyzer=="AnalyzeCFD")
+        {
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+        else if (analyzer=="Align")
+        {
+            if(firstFile)
+            {
+                std::ofstream overwriteFile("../macros/AlignBinning.py", std::ofstream::trunc);
+                overwriteFile.close();
+
+                auto copyPath = Form("%sAlignBinning.py",outpath.c_str());
+                std::ofstream saveCopy(copyPath, std::ofstream::trunc);
+                saveCopy.close();
+            }
+
+
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+        else if (analyzer=="InitialAnalyzer")
+        {
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+        else if (analyzer=="RecoAnalyzer")
+        {
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+        else
+        {
+            const std::vector<std::string> modulesList = {
+                "PrepNTupleVars",
+                "SignalProperties",
+                "SpatialReconstruction",
+                "Timing",
+            };
+            registerModules(tr, std::move(modulesList));
+        }
+    }
+};
+
+#endif
