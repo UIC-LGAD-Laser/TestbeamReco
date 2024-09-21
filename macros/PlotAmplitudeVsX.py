@@ -111,10 +111,14 @@ for channel in range(0, len(list_amplitude_vs_x)):
             tmpHist.Draw("hist")
             gaussian.Draw("same")
             canvas.SaveAs(outdirTmp+"q_"+str(i)+"_"+str(channel)+".gif")
-            if(i in midgap_bins and channel==1):
+            if(i in midgap_bins and channel==2):
+                tmpHist.Scale(1/tmpHist.Integral())
                 tmpHist.GetXaxis().SetRangeUser(0,200)
                 tmpHist.Write()
-                gaussian.Write()
+                gaussian2 = TF1("gaussian", "gaus")
+                gaussian2.SetRange(myMean-2.*myRMS,myMean+2.*myRMS)
+                tmpHist.Fit(gaussian2, "R")
+                gaussian2.Write()
         else:
             value = 0.0
 
