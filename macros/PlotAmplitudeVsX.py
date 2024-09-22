@@ -50,7 +50,7 @@ for i in range(3):
 
 th3_amplitude_vs_xy_channelall = inputfile.Get("totamplitude_vs_xy")
 
-shift = 0#inputfile.Get("stripBoxInfo03").GetMean(1)
+shift = -0.25#inputfile.Get("stripBoxInfo03").GetMean(1)
 
 #Build 2D amp vs x histograms
 list_th2_amplitude_vs_x = []
@@ -74,16 +74,17 @@ canvas = TCanvas("cv","cv",1000,800)
 maxAmpChannels = []
 maxAmpALL = 0
 n_channels = 0
-midgap_bins = [list_amplitude_vs_x[1].FindBin(-0.25)]
+midgap_bins = [list_amplitude_vs_x[1].FindBin(0)]
 
 amplitude_distrib = TFile("%sMidGapAmp_distribution.root"%(outdir),"RECREATE")
 
 #loop over X,Y bins
-for channel in range(0, len(list_amplitude_vs_x)):
+for channel in range(1, len(list_amplitude_vs_x)):
     # print("Channel : " + str(channel))
     maxAmp = 0
     totalEvents = list_th2_amplitude_vs_x[channel].GetEntries()
-    for i in range(1, list_amplitude_vs_x[channel].GetXaxis().GetNbins()+1):
+    # for i in range(1, list_amplitude_vs_x[channel].GetXaxis().GetNbins()+1):
+    for i in range(list_amplitude_vs_x[channel].GetXaxis().FindBin(-0.25), list_amplitude_vs_x[channel].GetXaxis().FindBin(0.25)):
         tmpHist = list_th2_amplitude_vs_x[channel].ProjectionY("py",i,i)
         tmpHist.GetXaxis().SetRangeUser(0,200)
         myMean = tmpHist.GetMean()
@@ -112,7 +113,10 @@ for channel in range(0, len(list_amplitude_vs_x)):
             gaussian.Draw("same")
             canvas.SaveAs(outdirTmp+"q_"+str(i)+"_"+str(channel)+".gif")
             if(i in midgap_bins and channel==2):
-                tmpHist.Scale(1/tmpHist.Integral())
+                max_bin = tmpHist.GetMaximumBin()
+                max_count = tmpHist.GetBinContent(max_bin)
+                tmpHist.Scale(1.0 / max_count)
+                # tmpHist.Scale(1/tmpHist.Integral())
                 tmpHist.GetXaxis().SetRangeUser(0,200)
                 tmpHist.Write()
                 gaussian2 = TF1("gaussian", "gaus")
@@ -146,6 +150,7 @@ for i,ch in enumerate(channel_good_index):
     plotList_amplitude_vs_x.append(plot_amplitude)
 
 totalAmplitude_vs_x = TH1F("htemp","",1,-xlength,xlength)
+
 totalAmplitude_vs_x.Draw("hist")
 totalAmplitude_vs_x.SetStats(0)
 totalAmplitude_vs_x.SetTitle("")
