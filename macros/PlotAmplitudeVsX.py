@@ -167,13 +167,29 @@ totalAmplitude_vs_x.SetMaximum(ylength)
 # totalAmplitude_vs_x.Draw("hist same")
 
 print("\n")
-temp1=list_amplitude_vs_x[2].GetBinContent(list_amplitude_vs_x[2].FindBin(-0.25))
-temp2=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(-0.25))
-temp3=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(0.25))
-temp4=list_amplitude_vs_x[0].GetBinContent(list_amplitude_vs_x[0].FindBin(0.25))
-print("Bins: ",list_amplitude_vs_x[2].FindBin(-0.25),list_amplitude_vs_x[1].FindBin(-0.25),list_amplitude_vs_x[1].FindBin(0.25),list_amplitude_vs_x[0].FindBin(0.25))
-print("Mid-gap amplitude = ",temp1,temp2,temp3,temp4)
-print("\nAverage mid-gap amplitude = ",(temp1+temp2+temp3+temp4)/4,"\n")
+# for laser paper plots, we look at amplitudes between the right two chnnels only.
+# temp1=list_amplitude_vs_x[2].GetBinContent(list_amplitude_vs_x[2].FindBin(-0.25))
+# temp2=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(-0.25))
+# temp3=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(0.25))
+# temp4=list_amplitude_vs_x[0].GetBinContent(list_amplitude_vs_x[0].FindBin(0.25))
+# print("Bins: ",list_amplitude_vs_x[2].FindBin(-0.25),list_amplitude_vs_x[1].FindBin(-0.25),list_amplitude_vs_x[1].FindBin(0.25),list_amplitude_vs_x[0].FindBin(0.25))
+# print("Mid-gap amplitude = ",temp1,temp2,temp3,temp4)
+# print("\nAverage mid-gap amplitude = ",(temp1+temp2+temp3+temp4)/4,"\n")
+temp3=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(0))
+temp4=list_amplitude_vs_x[2].GetBinContent(list_amplitude_vs_x[2].FindBin(0))
+print("Bins: ",list_amplitude_vs_x[1].FindBin(0),list_amplitude_vs_x[2].FindBin(0))
+print("Mid-gap amplitude = ",temp3,temp4)
+print("\nAverage mid-gap amplitude = ",(temp3+temp4)/2,"\n")
+
+midgapamplitude = (temp3+temp4)/2
+filename = '../test/time_resolutions.txt'
+with open(filename, 'r') as trfile:
+    lines = trfile.readlines()
+with open(filename, 'w') as trfile:
+    for line in lines:
+        if line.startswith(f'{dataset}:'):
+            line = line.strip() + f': {round(midgapamplitude,2)}\n'
+        trfile.write(line)
 
 legend = TLegend(2*myStyle.GetMargin()+0.02,1-myStyle.GetMargin()-0.02-0.2,1-myStyle.GetMargin()-0.02,1-myStyle.GetMargin()-0.02)
 legend.SetNColumns(3)

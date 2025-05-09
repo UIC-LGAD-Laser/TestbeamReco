@@ -57,7 +57,10 @@ jitter.GetYaxis().SetTitle("Time resolution [ps]")
 
 for number in range(1, jitter.GetXaxis().GetNbins()+1):
     j = jitter.GetBinContent(number)
-    t = tr.GetBinContent(number)
+    x_position = jitter.GetXaxis().GetBinCenter(number)
+    bin_number_tr = tr.FindBin(x_position)
+    t = tr.GetBinContent(bin_number_tr)
+    # t = tr.GetBinContent(number)
     if (t>=j):
         l = math.sqrt(t*t - j*j)
     else:
@@ -82,5 +85,10 @@ canvas.Update()
 canvas.SaveAs(outdir+"TR_and_Jitter_vs_x.gif")
 
 # Close the file
+outputfile = TFile(outdir+"./AllTRs.root","RECREATE")
+tr.Write()
+jitter.Write()
+landau.Write()
+outputfile.Close()
 inputfile.Close()
 inputfile2.Close()

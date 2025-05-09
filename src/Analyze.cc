@@ -355,10 +355,10 @@ void Analyze::Loop(NTupleReader& tr, int maxevents)
                         std::string index = std::to_string(i);
                         for(unsigned int j = 0; j < time[0].size(); j++)
                         {
-                            my_histos["wave"+index]->Fill(1e9*time[0][j], channel[i][j]);
-                            my_1d_prof["waveProf"+index+regionsOfIntrest[k].getName()]->Fill(1e9*time[0][j], channel[i][j]);
-                            // my_histos["wave"+index]->Fill(1e9*time[0][j] - photekTime - t, channel[i][j]);
-                            // my_1d_prof["waveProf"+index+regionsOfIntrest[k].getName()]->Fill(1e9*time[0][j] - photekTime - t, channel[i][j]);
+                            // my_histos["wave"+index]->Fill(1e9*time[0][j], channel[i][j]);
+                            // my_1d_prof["waveProf"+index+regionsOfIntrest[k].getName()]->Fill(1e9*time[0][j], channel[i][j]);
+                            my_histos["wave"+index]->Fill(1e9*time[0][j] - photekTime - t, channel[i][j]);
+                            my_1d_prof["waveProf"+index+regionsOfIntrest[k].getName()]->Fill(1e9*time[0][j] - photekTime - t, channel[i][j]);
                         }
                     }
 

@@ -57,12 +57,15 @@ for i in range(1,hist.GetXaxis().GetNbins()+1):
     myMean = tmpHist.GetMean()
     myRMS = tmpHist.GetRMS()
     value = myMean
+    valueError = 0
     nEvents = tmpHist.GetEntries()
-    if(nEvents>50):
-        tmpHist.Rebin(4)
+    if(nEvents>1000):
+        # tmpHist.Rebin(4)
         myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
         myMPV = myLanGausFunction.GetParameter(1)
+        myMPVError = myLanGausFunction.GetParError(1)
         value = myMPV
+        valueError = myMPVError
         # gaussian = TF1("gaussian", "gaus")
         # gaussian.SetRange(myMean-2*myRMS,myMean+2*myRMS)
         # tmpHist.Fit(gaussian, "R")
@@ -81,10 +84,12 @@ for i in range(1,hist.GetXaxis().GetNbins()+1):
         outdir_tmp = myStyle.GetPlotsDir(outdir, "Jitter/jitter_x_fits/")
         canvas.SaveAs(outdir_tmp+"q_"+str(i)+".gif")
         jitter_vs_x.SetBinContent(i,value)
+        jitter_vs_x.SetBinError(i,valueError)
     else:
         jitter_vs_x.SetBinContent(i,0)
+        jitter_vs_x.SetBinError(i,0)
             
-jitter_vs_x.Draw("hist")
+jitter_vs_x.Draw("hist E")
 jitter_vs_x.SetStats(0)
 jitter_vs_x.SetTitle("Weighted jitter vs X")
 jitter_vs_x.GetXaxis().SetTitle("Track x position [mm]")

@@ -103,17 +103,17 @@ for i in range(0, nXBins+1):
         myRMS = tmpHist.GetRMS()
         myMean = tmpHist.GetMean()
         nEvents = tmpHist.GetEntries()
-        fitlow = myMean - 1.5*myRMS
-        fithigh = myMean + 1.5*myRMS
+        fitlow = myMean - 3*myRMS
+        fithigh = myMean + 3*myRMS
         value = myRMS
         error = 0.0
         valueMean = myMean
         errorMean = 0.0
 
         minEvtsCut = totalEvents/nXBins
+        if("20T" in dataset):
+            minEvtsCut = 0.3*totalEvents/nbins
         if i==0: print(info.inHistoName,": nEvents >",minEvtsCut,"( total events:",totalEvents,")")
-
-
 
         #Do fit 
         if(nEvents > minEvtsCut):
@@ -157,7 +157,28 @@ for i in range(0, nXBins+1):
         info.th1.SetBinError(i,error)
         # info.th1Mean.SetBinContent(i,valueMean)
         # info.th1Mean.SetBinError(i,errorMean)
-                        
+
+print("\n")
+leftmidgapbin = all_histoInfos[2].th1.FindBin(-0.25)
+leftmidgappos = all_histoInfos[2].th1.GetBinCenter(leftmidgapbin)
+rightmidgapbin = all_histoInfos[2].th1.FindBin(0.25)
+rightmidgappos = all_histoInfos[2].th1.GetBinCenter(rightmidgapbin)
+
+temp1=all_histoInfos[2].th1.GetBinContent(leftmidgapbin)
+temp2=all_histoInfos[2].th1.GetBinContent(rightmidgapbin)
+print(f'Bins: {leftmidgapbin}(@x={leftmidgappos}), {rightmidgapbin}(@x={rightmidgappos})')
+print("Mid-gap TR = ",temp1,temp2)
+print("\nAverage mid-gap TR = ",(temp1+temp2)/2,"\n")
+
+filename = '../test/time_resolutions.txt'
+if os.path.exists(filename):
+    append_write = 'a'
+else:
+    append_write = 'w'
+trfile = open(filename,append_write)
+trfile.write(f'{dataset}: {round((temp2),2)}\n')
+trfile.close()
+
 # Plot 2D histograms
 outputfile = TFile(outdir+"timeDiffVsY.root","RECREATE")
 for info in all_histoInfos:

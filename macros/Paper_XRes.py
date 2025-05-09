@@ -204,6 +204,9 @@ for i in range(0, nXBins+1):
                    canvas.SaveAs(outdir_q+"q_"+info.outHistoName+str(i)+".gif")
                    print ("Bin : " + str(i) + " (x = %.3f"%(info.th1.GetXaxis().GetBinCenter(i)) +") -> Resolution: %.3f +/- %.3f"%(value, error))
             else:
+                print("==================================")
+                print("FIT VALS NOT BEING USED.")
+                print("==================================")
                 value *= 1000.0
                 error *= 1000.0
                 ##For Debugging

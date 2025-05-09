@@ -83,6 +83,7 @@ for i in range(1, list_risetime_vs_x.GetXaxis().GetNbins()+1):
 
     nXBins = th1_Nbins
     minEvtsCut = totalEvents/nXBins
+    if ("W9" in dataset): minEvtsCut=minEvtsCut*0.5
     if i==1: print("nEvents > %.2f (Total events: %i; N bins: %i)"%(minEvtsCut,totalEvents,nXBins))
 
     if(nEvents > minEvtsCut):
