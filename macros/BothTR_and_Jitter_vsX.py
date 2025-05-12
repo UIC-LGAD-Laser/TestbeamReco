@@ -45,11 +45,11 @@ jitter = inputfile.Get("jitter_vs_x")
 tr = inputfile2.Get("weighted2_time_diffTracker")
 landau = jitter.Clone("landau_vs_x")
 
-jitter.Draw("hist")
+jitter.Draw("hist E")
 jitter.SetMaximum(130)
 jitter.SetLineColor(2)
 jitter.SetStats(0)
-tr.Draw("hist same")
+tr.Draw("hist same E")
 tr.SetLineColor(4)
 tr.SetStats(0)
 jitter.GetXaxis().SetTitle("Track x position [mm]")
@@ -57,17 +57,23 @@ jitter.GetYaxis().SetTitle("Time resolution [ps]")
 
 for number in range(1, jitter.GetXaxis().GetNbins()+1):
     j = jitter.GetBinContent(number)
+    j_error = jitter.GetBinError(number)
     x_position = jitter.GetXaxis().GetBinCenter(number)
     bin_number_tr = tr.FindBin(x_position)
     t = tr.GetBinContent(bin_number_tr)
-    # t = tr.GetBinContent(number)
-    if (t>=j):
+    t_error = tr.GetBinError(bin_number_tr)
+    # t = tr.GetBinContent(number);/
+    if (t>j):
         l = math.sqrt(t*t - j*j)
+        l_error = math.sqrt((t**2 * t_error**2 / l**2) + (j**2 * j_error**2 / l**2))
     else:
         l = 0
+        l_error = 0
     landau.SetBinContent(number, l)
+    landau.SetBinError(number,l_error)
 
-landau.Draw("hist same")
+
+landau.Draw("hist E same")
 landau.SetLineColor(46)
 
 legend = TLegend(2*myStyle.GetMargin()+0.02,1-myStyle.GetMargin()-0.02-0.2,1-myStyle.GetMargin()-0.02,1-myStyle.GetMargin()-0.02)

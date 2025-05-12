@@ -59,8 +59,13 @@ for i in range(1,hist.GetXaxis().GetNbins()+1):
     value = myMean
     valueError = 0
     nEvents = tmpHist.GetEntries()
-    if(nEvents>1000):
-        # tmpHist.Rebin(4)
+    minEvtsCut = 1000
+    # Fit range specific for Lecroy datasets of W2, W4 and W9 sensors.
+    if("W9" in dataset):
+        minEvtsCut = 50
+    if(nEvents>minEvtsCut):
+        if("W9" in dataset):
+            tmpHist.Rebin(2)
         myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
         myMPV = myLanGausFunction.GetParameter(1)
         myMPVError = myLanGausFunction.GetParError(1)

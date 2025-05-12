@@ -92,7 +92,7 @@ if debugMode:
 nXBins = all_histoInfos[0].th2.GetXaxis().GetNbins()
 
 #loop over X bins
-for i in range(0, nXBins+1):
+for i in range(1, nXBins+1):
     ##For Debugging
     #if not (i==46 and j==5):
     #    continue
@@ -103,16 +103,18 @@ for i in range(0, nXBins+1):
         myRMS = tmpHist.GetRMS()
         myMean = tmpHist.GetMean()
         nEvents = tmpHist.GetEntries()
-        fitlow = myMean - 3*myRMS
-        fithigh = myMean + 3*myRMS
+        # Fit range specific for Lecroy datasets of W2, W4 and W9 sensors.
+        rmsRange = 1.5 if "W2" in dataset else 3
+        fitlow = myMean - rmsRange*myRMS
+        fithigh = myMean + rmsRange*myRMS
         value = myRMS
         error = 0.0
         valueMean = myMean
         errorMean = 0.0
 
         minEvtsCut = totalEvents/nXBins
-        if("20T" in dataset):
-            minEvtsCut = 0.3*totalEvents/nbins
+        if("W9" in dataset):
+            minEvtsCut = 0.3*totalEvents/nXBins
         if i==0: print(info.inHistoName,": nEvents >",minEvtsCut,"( total events:",totalEvents,")")
 
         #Do fit 
@@ -145,7 +147,7 @@ for i in range(0, nXBins+1):
             # print ("Bin : " + str(i) + " -> " + str(value) + " +/- " + str(error))
         else:
             value = 0.0
-            valueMean = 0.0
+            error = 0.0
 
         # Removing telescope contribution
         #if value!=0.0:
@@ -170,7 +172,7 @@ print(f'Bins: {leftmidgapbin}(@x={leftmidgappos}), {rightmidgapbin}(@x={rightmid
 print("Mid-gap TR = ",temp1,temp2)
 print("\nAverage mid-gap TR = ",(temp1+temp2)/2,"\n")
 
-filename = '../test/time_resolutions.txt'
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions.txt'
 if os.path.exists(filename):
     append_write = 'a'
 else:
