@@ -104,6 +104,7 @@ for i in range(1, nXBins+1):
         myMean = tmpHist.GetMean()
         nEvents = tmpHist.GetEntries()
         # Fit range specific for Lecroy datasets of W2, W4 and W9 sensors.
+        # DS(30May25) - changed from 1.5 for only W2, to, 1.5 for W2,4,9; after updated timeRes/jitter hists in analyze.
         rmsRange = 1.5 if "W2" in dataset else 3
         fitlow = myMean - rmsRange*myRMS
         fithigh = myMean + rmsRange*myRMS
@@ -114,7 +115,8 @@ for i in range(1, nXBins+1):
 
         minEvtsCut = totalEvents/nXBins
         if("W9" in dataset):
-            minEvtsCut = 0.3*totalEvents/nXBins
+            minEvtsCut = 0.7*totalEvents/nXBins # changed from 0.3X to 1.5X to account for increased statistics from W9 (10mV noise threshold)
+            # DS(30May25) - changed from 0.3X to 0.7X for W9 after updated timeRes/jitter hists in analyze.
         if i==0: print(info.inHistoName,": nEvents >",minEvtsCut,"( total events:",totalEvents,")")
 
         #Do fit 

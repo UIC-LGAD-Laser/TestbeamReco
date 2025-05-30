@@ -59,10 +59,11 @@ for i in range(1,hist.GetXaxis().GetNbins()+1):
     value = myMean
     valueError = 0
     nEvents = tmpHist.GetEntries()
-    minEvtsCut = 1000
-    # Fit range specific for Lecroy datasets of W2, W4 and W9 sensors.
-    if("W9" in dataset):
-        minEvtsCut = 50
+    minEvtsCut = 1500
+    # Fit range specific for Lecroy datasets of W2, W4 and W9 sensors. 
+    # DS(30May25) - removed specific selection for W9 after updated timeRes/jitter hists in analyze.
+    # if("W9" in dataset):
+    #     minEvtsCut = 50
     if(nEvents>minEvtsCut):
         if("W9" in dataset):
             tmpHist.Rebin(2)

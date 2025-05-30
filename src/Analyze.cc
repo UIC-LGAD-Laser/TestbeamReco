@@ -104,6 +104,15 @@ void Analyze::InitHistos(NTupleReader& tr, const std::vector<std::vector<int>>& 
     utility::makeHisto(my_2d_histos,"Amp12_vs_x", "; X [mm]; Sum Amp12", std::round((xmax-xmin)/xBinSize),xmin,xmax, 250,0.0,500);
     utility::makeHisto(my_2d_histos,"Amp1_vs_x", "; X [mm]; Amp1", std::round((xmax-xmin)/xBinSize),xmin,xmax, 250,0.0,500);
     utility::makeHisto(my_2d_histos,"Amp2_vs_x", "; X [mm]; Amp2", std::round((xmax-xmin)/xBinSize),xmin,xmax, 250,0.0,500);
+
+    // DS - Add 2 histograms to calculate efficiencies and fraction of twoGoodHits to oneGoodHit for input to simulation
+    utility::makeHisto(my_2d_histos,"efficiency_vs_x_OneGoodHit", "; X [mm]; Counts", std::round((xmax-xmin)/xBinSize),xmin,xmax, 100, 0, 5000);
+    utility::makeHisto(my_2d_histos,"efficiency_vs_x_TwoGoodHit", "; X [mm]; Counts", std::round((xmax-xmin)/xBinSize),xmin,xmax, 100, 0, 5000);
+    utility::makeHisto(my_2d_histos,"efficiency_vs_xy_denominator_coarseBins", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, std::round((ymax-ymin)/yBinSize),ymin,ymax);
+    utility::makeHisto(my_2d_histos,"efficiency_vs_xy_numerator_coarseBins", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, std::round((ymax-ymin)/yBinSize),ymin,ymax);
+    utility::makeHisto(my_2d_histos,"efficiency_vs_xy_oneStrip_numerator_coarseBins", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, std::round((ymax-ymin)/yBinSize),ymin,ymax);
+    utility::makeHisto(my_2d_histos,"efficiency_vs_xy_twoStrip_numerator_coarseBins", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, std::round((ymax-ymin)/yBinSize),ymin,ymax);
+
     utility::makeHisto(my_2d_histos,"dXdFrac_vs_Xtrack", "; X_{track} [mm]; dX/dFraction [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, 500,-19.0,1.0);
     utility::makeHisto(my_2d_histos,"deltaX_vs_Xtrack_twoStrips", "; X_{track} [mm]; #X_{reco} - X_{track} [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, 200,-0.5,0.5);
     utility::makeHisto(my_2d_histos,"amplitude_vs_risetime","; amp [mV]; risetime [ps]",500, 0, 500, 500, 0, 1500);
@@ -220,6 +229,7 @@ void Analyze::Loop(NTupleReader& tr, int maxevents)
         bool goodMaxLGADAmp = maxAmpLGAD > signalAmpThreshold;
         bool midgap = ((x>0.225) && (x<0.275))||((x<-0.225) && (x>-0.275));
 
+        bool oneGoodHit = ampLGAD[amp1Indexes.first][amp1Indexes.second] > noiseAmpThreshold;
         bool twoGoodHits = ampLGAD[amp1Indexes.first][amp1Indexes.second] > noiseAmpThreshold && ampLGAD[amp2Indexes.first][amp2Indexes.second] > noiseAmpThreshold;
         bool twoStripsReco = goodNeighbour && (Amp1OverAmp1and2 < positionRecoMaxPoint);
         //bool twoStripsReco = (Amp1OverAmp1and2 < positionRecoMaxPoint);   
@@ -297,6 +307,14 @@ void Analyze::Loop(NTupleReader& tr, int maxevents)
         utility::fillHisto(pass && goodMaxLGADAmp && twoStripsReco, my_2d_histos, "Amp12_vs_x", x, Amp12);
         utility::fillHisto(pass && goodMaxLGADAmp && twoStripsReco, my_2d_histos, "Amp1_vs_x", x, maxAmp);
         utility::fillHisto(pass && goodMaxLGADAmp && twoStripsReco, my_2d_histos, "Amp2_vs_x", x, amp2);
+
+        utility::fillHisto(pass && oneGoodHit,                      my_2d_histos, "efficiency_vs_x_OneGoodHit", x, 1);
+        utility::fillHisto(pass && twoGoodHits,                     my_2d_histos, "efficiency_vs_x_TwoGoodHit", x, 1);
+        utility::fillHisto(pass,                                                     my_2d_histos, "efficiency_vs_xy_denominator_coarseBins", x,y);
+        utility::fillHisto(pass && goodOverNoiseAmp,                                 my_2d_histos, "efficiency_vs_xy_numerator_coarseBins", x,y);
+        utility::fillHisto(pass && goodOverNoiseAmp && oneGoodHit && !twoGoodHits,   my_2d_histos, "efficiency_vs_xy_oneStrip_numerator_coarseBins", x,y);
+        utility::fillHisto(pass && goodOverNoiseAmp && twoGoodHits,                  my_2d_histos, "efficiency_vs_xy_twoStrip_numerator_coarseBins", x,y);
+        
         utility::fillHisto(pass && goodMaxLGADAmp && twoStripsReco, my_2d_histos, "dXdFrac_vs_Xtrack", x,dXdFrac);
         utility::fillHisto(pass && goodMaxLGADAmp,                  my_2d_histos, "amplitude_vs_risetime", maxAmp, risetimeLGAD[amp1Indexes.first][amp1Indexes.second]);
         utility::fillHisto(pass && goodMaxLGADAmp && hitOnMetal,    my_2d_histos, "amplitude_vs_risetime_onMetal", maxAmp, risetimeLGAD[amp1Indexes.first][amp1Indexes.second]);
@@ -309,13 +327,13 @@ void Analyze::Loop(NTupleReader& tr, int maxevents)
         utility::fillHisto(pass && goodMaxLGADAmp,                  my_3d_histos, "signalOverNoise_vs_xy", x,y,maxAmp/baselineRMS[amp1Indexes.first][amp1Indexes.second]);
         utility::fillHisto(pass && goodMaxLGADAmp,                  my_3d_histos, "charge_vs_xy", x,y,chargeLGAD[amp1Indexes.first][amp1Indexes.second]);
         utility::fillHisto(pass && goodMaxLGADAmp,                  my_3d_histos, "ampChargeRatio_vs_xy", x,y,ampChargeRatioLGAD[amp1Indexes.first][amp1Indexes.second]);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits, my_3d_histos, "timeDiff_vs_xy", x,y,maxAmpTime-photekTime);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits, my_3d_histos, "timeDiffTracker_vs_xy", x,y,maxAmpTimeTracker-photekTime);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits, my_3d_histos, "weighted2_timeDiff_tracker_vs_xy", x,y,weighted2_time_tracker-photekTime);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits, my_3d_histos, "weighted2_time_tracker_vs_xy", x,y,weighted2_time_tracker);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits, my_3d_histos, "photektime_vs_xy", x,y, photekTime);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits && LaserhitOnMetal, my_3d_histos, "weighted2_timeDiff_tracker_vs_xy_noMetal", x,y,weighted2_time_tracker-photekTime);
-        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits,   my_3d_histos, "weighted_jitter_vs_xy", x,y, weighted_jitter);
+        utility::fillHisto(pass && goodMaxLGADAmp, my_3d_histos, "timeDiff_vs_xy", x,y,maxAmpTime-photekTime);
+        utility::fillHisto(pass && goodMaxLGADAmp, my_3d_histos, "timeDiffTracker_vs_xy", x,y,maxAmpTimeTracker-photekTime);
+        utility::fillHisto(pass && goodMaxLGADAmp, my_3d_histos, "weighted2_timeDiff_tracker_vs_xy", x,y,weighted2_time_tracker-photekTime);
+        utility::fillHisto(pass && goodMaxLGADAmp, my_3d_histos, "weighted2_time_tracker_vs_xy", x,y,weighted2_time_tracker);
+        utility::fillHisto(pass && goodMaxLGADAmp, my_3d_histos, "photektime_vs_xy", x,y, photekTime);
+        utility::fillHisto(pass && goodMaxLGADAmp && LaserhitOnMetal, my_3d_histos, "weighted2_timeDiff_tracker_vs_xy_noMetal", x,y,weighted2_time_tracker-photekTime);
+        utility::fillHisto(pass && goodMaxLGADAmp,   my_3d_histos, "weighted_jitter_vs_xy", x,y, weighted_jitter);
         
 
 

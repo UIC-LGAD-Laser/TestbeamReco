@@ -85,7 +85,9 @@ for i in range(1, list_baselineRMS_vs_x.GetXaxis().GetNbins()+1):
         gaussian.SetRange(myMean-1.5*myRMS,myMean+1.5*myRMS)
         tmpHist.Fit(gaussian, "R")
         myMean = gaussian.GetParameter(1)
+        myMeanError = gaussian.GetParError(1)
         value = myMean
+        error = myMeanError
         # myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1*myRMS,myMean+3*myRMS))
         # myMPV = myLanGausFunction.GetParameter(1)
         # value = myMPV
@@ -98,10 +100,14 @@ for i in range(1, list_baselineRMS_vs_x.GetXaxis().GetNbins()+1):
             canvas.SaveAs(outdirTmp2+"q_"+str(i)+".gif")
     else:
         value = 0.0
+        error = 0.0
 
-    value = value if(value>0.0) else 0.0
+    if(value<0.0):
+        value = 0.0
+        error = 0.0
 
     list_baselineRMS_vs_x.SetBinContent(i,value)
+    list_baselineRMS_vs_x.SetBinError(i,error)
 
 
 # Save baselineRMS histograms
@@ -139,7 +145,7 @@ legend.SetTextSize(myStyle.GetSize())
 legend.SetBorderSize(0)
 legend.SetFillColor(kWhite)
 
-plotList_baselineRMS_vs_x.Draw("hist same")
+plotList_baselineRMS_vs_x.Draw("hist E same")
 
 # myStyle.BeamInfo()
 myStyle.SensorInfoSmart(dataset)

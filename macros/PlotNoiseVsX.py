@@ -100,7 +100,9 @@ for channel in range(0, len(list_baselineRMS_vs_x)):
             gaussian.SetRange(myMean-1.5*myRMS,myMean+1.5*myRMS)
             tmpHist.Fit(gaussian, "R")
             myMean = gaussian.GetParameter(1)
+            myMeanError = gaussian.GetParError(1)
             value = myMean
+            error = myMeanError
             # myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1*myRMS,myMean+3*myRMS))
             # myMPV = myLanGausFunction.GetParameter(1)
             # value = myMPV
@@ -112,9 +114,13 @@ for channel in range(0, len(list_baselineRMS_vs_x)):
                 canvas.SaveAs(outdirTmp2+"q_"+str(i)+"_"+str(channel)+".gif")
         else:
             value = 0.0
-        value = value if(value>0.0) else 0.0
+            error = 0.0
+        if(value<0.0):
+            value = 0.0
+            error = 0.0
 
         list_baselineRMS_vs_x[channel].SetBinContent(i,value)
+        list_baselineRMS_vs_x[channel].SetBinError(i,error)
                     
 # Save baselineRMS histograms
 outputfile = TFile("%sPlotNoiseVsX.root"%(outdirTmp1),"RECREATE")
@@ -168,7 +174,7 @@ legend.SetBorderSize(0)
 legend.SetFillColor(kWhite)
 
 for i,ch in enumerate(channel_good_index):
-    plotList_baselineRMS_vs_x[i].Draw("hist same")
+    plotList_baselineRMS_vs_x[i].Draw("hist E same")
     legend.AddEntry(plotList_baselineRMS_vs_x[i], "Strip %i"%(ch+1))
 legend.Draw()
 
