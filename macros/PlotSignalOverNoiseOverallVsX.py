@@ -82,13 +82,14 @@ for i in range(1, list_signalOverNoise_vs_x.GetXaxis().GetNbins()+1):
     nEvents = tmpHist.GetEntries()
 
     nXBins = th1_Nbins
-    minEvtsCut = 0.75*totalEvents/nXBins
+    minEvtsCut = 0.7*totalEvents/nXBins
+    # DS(30May25) - changed from 0.75X to 0.7X for W9 after updated timeRes/jitter hists in analyze.
     if i==1: print("nEvents > %.2f (Total events: %i; N bins: %i)"%(minEvtsCut,totalEvents,nXBins))
 
     if(nEvents > minEvtsCut):
-        tmpHist.Rebin(5)
-        
-        myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1*myRMS,myMean+3*myRMS))
+        # tmpHist.Rebin(5)
+        # DS(30May25) - Removed rebinning as it seemed like a bad option.
+        myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
         myMPV = myLanGausFunction.GetParameter(1)
         value = myMPV
 

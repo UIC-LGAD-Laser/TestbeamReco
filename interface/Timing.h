@@ -46,7 +46,8 @@ private:
         double weighted_time=0.0, weighted_time_goodSig=0.0, weighted2_time=0.0, weighted2_time_goodSig=0.0;
         double weighted_time_tracker=0.0, weighted2_time_tracker=0.0;
         double average_time_LGADXY=0.0, average_time_LGADX=0.0, weighted_time_LGADXY=0.0, weighted2_time_LGADXY=0.0, weighted_time_LGADX=0.0, weighted2_time_LGADX=0.0;
-        double weighted_time_trackerX = 0.0, weighted2_time_trackerX = 0.0;        
+        double weighted_time_trackerX = 0.0, weighted2_time_trackerX = 0.0;     
+        double t1_res = 0.0, t2_res = 0.0; //DS - new variables to plot t1 and t2 vs X and compare with simulation results.   
         
         bool similarTime12 = abs(time2 - time1) < 1.0;
         bool twoGoodChannel = amp1 > noiseAmpThreshold  &&  amp2 > noiseAmpThreshold && similarTime12 && time1 != 0.0 && time2 != 0.0;
@@ -69,6 +70,8 @@ private:
 
            average_time_LGADXY = timeLGADXY1;
            average_time_LGADX = timeLGADX1;
+
+           t1_res = timeTracker1;
         }
         else 
         {
@@ -88,6 +91,9 @@ private:
 
            average_time_LGADXY = (timeLGADXY1 + timeLGADXY2)*0.5;
            average_time_LGADX = (timeLGADX1 + timeLGADX2)*0.5;
+
+           t1_res = timeTracker1;
+           t2_res = timeTracker2;
              
         }
    
@@ -123,6 +129,8 @@ private:
         tr.registerDerivedVar("weighted2_time_goodSig", weighted2_time_goodSig);
 
         tr.registerDerivedVar("twoGoodChannel", twoGoodChannel);
+        tr.registerDerivedVar("t1_res", t1_res);
+        tr.registerDerivedVar("t2_res", t2_res);
 
 
     }

@@ -23,7 +23,6 @@ parser.add_option('-D', dest='Dataset', default = "", help="Dataset, which deter
 options, args = parser.parse_args()
 
 dataset = options.Dataset
-outdir=""
 if organized_mode: 
     outdir = myStyle.getOutputDir(dataset)
     inputfile = TFile("%s/Jitter/jitter_vs_x.root"%(outdir))
@@ -31,6 +30,25 @@ if organized_mode:
 else: 
     inputfile = TFile("../test/myoutputfile.root") 
     inputfile2 = TFile("../test/myoutputfile.root") 
+
+map = {'LeCroy_W2_3_2_198V_99P9attn': 'HPK_W2_3_2_50T_1P0_500P_50M_E240_180V', 'LeCroy_W4_17_2_222V_99P9attn': 'HPK_W4_17_2_50T_1P0_500P_50M_C240_204V', 
+'HPK_W5_17_2_205V_94attn': 'HPK_W5_17_2_50T_1P0_500P_50M_E600_190V', 
+'LeCroy_W9_15_2_121V_92P3attn': 'HPK_W9_15_2_20T_1P0_500P_50M_E600_114V'}
+ftbf_dataset = map[dataset]
+
+noise_file = TFile(f'{outdir}/NoiseStudy/PlotNoiseOverallVsX.root')
+noise_hist = noise_file.Get("baselineRMS_vs_x")
+noise_laser = noise_hist.GetBinContent(noise_hist.GetXaxis().FindBin(-0.25))
+noise_laser_error = noise_hist.GetBinError(noise_hist.GetXaxis().FindBin(-0.25))
+noise_file.Close()
+ftbf_noise_file = TFile(f'/uscms/home/dshekar/nobackup/laser_analysis/fnal_TestbeamReco/output/{ftbf_dataset}/Noise/NoiseVsX.root')
+ftbf_noise_hist = ftbf_noise_file.Get("Noise")
+noise_ftbf = ftbf_noise_hist.GetBinContent(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
+noise_ftbf_error = ftbf_noise_hist.GetBinError(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
+ftbf_noise_file.Close()
+scaling_factor = noise_ftbf/noise_laser
+print("Noise from laser at midgap = ", noise_laser)
+print("Noise from ftbf at midgap = ", noise_ftbf)
 
 colors = myStyle.GetColors(True)
 
@@ -42,6 +60,8 @@ pitch  = sensor_Geometry['pitch']
 canvas = TCanvas("canvas", "TR and Jitter vs X", 1000, 800)
 
 jitter = inputfile.Get("jitter_vs_x")
+scaled_jitter = jitter.Clone("scaled_jitter_vs_x")
+scaled_jitter.Reset()  # Clear the contents of the cloned histogram 
 tr = inputfile2.Get("weighted2_time_diffTracker")
 landau = jitter.Clone("landau_vs_x")
 
@@ -58,17 +78,21 @@ jitter.GetYaxis().SetTitle("Time resolution [ps]")
 for number in range(1, jitter.GetXaxis().GetNbins()+1):
     j = jitter.GetBinContent(number)
     j_error = jitter.GetBinError(number)
+    j_scaled = j*scaling_factor
+    j_scaled_error = math.sqrt( (noise_ftbf*j_error/noise_laser)**2 + (j*noise_ftbf_error/noise_laser)**2 + (j*noise_ftbf*noise_laser_error/(noise_laser)**2)**2 )
     x_position = jitter.GetXaxis().GetBinCenter(number)
     bin_number_tr = tr.FindBin(x_position)
     t = tr.GetBinContent(bin_number_tr)
     t_error = tr.GetBinError(bin_number_tr)
     # t = tr.GetBinContent(number);/
-    if (t>j):
-        l = math.sqrt(t*t - j*j)
-        l_error = math.sqrt((t**2 * t_error**2 / l**2) + (j**2 * j_error**2 / l**2))
+    if (t>j_scaled):
+        l = math.sqrt(t*t - j_scaled*j_scaled)
+        l_error = math.sqrt((t**2 * t_error**2 / l**2) + (j_scaled**2 * j_scaled_error**2 / l**2))
     else:
         l = 0
         l_error = 0
+    scaled_jitter.SetBinContent(number, j_scaled)
+    scaled_jitter.SetBinError(number, j_scaled_error)
     landau.SetBinContent(number, l)
     landau.SetBinError(number,l_error)
 
@@ -82,9 +106,9 @@ legend.SetTextFont(myStyle.GetFont())
 legend.SetTextSize(myStyle.GetSize())
 legend.SetBorderSize(0)
 legend.SetFillColor(kWhite)
-legend.AddEntry(jitter, "Jitter component only")
-legend.AddEntry(tr, "Total time resolution")
-legend.AddEntry(landau, "TR - Jitter (quadrature)")
+legend.AddEntry(jitter, "Scaled weighted jitter (j)")
+legend.AddEntry(tr, "Total time resolution (t)")
+legend.AddEntry(landau, "#sqrt{t^{2} - j^{2}}")
 legend.Draw()
 
 canvas.Update()
@@ -94,6 +118,7 @@ canvas.SaveAs(outdir+"TR_and_Jitter_vs_x.gif")
 outputfile = TFile(outdir+"./AllTRs.root","RECREATE")
 tr.Write()
 jitter.Write()
+scaled_jitter.Write()
 landau.Write()
 outputfile.Close()
 inputfile.Close()

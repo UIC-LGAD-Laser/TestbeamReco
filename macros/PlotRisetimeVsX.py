@@ -93,10 +93,14 @@ for channel in range(0, len(list_risetime_vs_x)):
 
         nXBins = th1_Nbins
         minEvtsCut = totalEvents/nXBins # Minimum value chosen to account for the risetime values at the strip (for laser source)
+        if("W9" in dataset):
+            minEvtsCut = 0.2*totalEvents/nXBins
+            # DS(30May25) - changed from 50 to 0.7X for W9 after updated timeRes/jitter hists in analyze.
         if i==1: print("Channel %i: nEvents > %.2f (Total events: %i; N bins: %i)"%(channel,minEvtsCut,totalEvents,nXBins))
 
         if(nEvents > minEvtsCut):
-            tmpHist.Rebin(5)
+            tmpHist.Rebin(4)
+            # DS(30May25) - changed from 10 to 4.
             # gaussian = TF1("gaussian", "gaus")
             # gaussian.SetRange(myMean-1.5*myRMS,myMean+1.5*myRMS)
             # tmpHist.Fit(gaussian, "R")
@@ -111,7 +115,7 @@ for channel in range(0, len(list_risetime_vs_x)):
                 myLanGausFunction.Draw("same") # For Debugging - LanGauss
                 canvas.SaveAs(outdirTmp2+"q_"+str(i)+"_"+str(channel)+".gif")
         else:
-            value = 0.0
+            value = tmpHist.GetMean() # Modified for obtaining risetime values for sub-leading channel beyond mid-gap in W9 sensor.
         value = value if(value>0.0) else 0.0
 
         list_risetime_vs_x[channel].SetBinContent(i,value)

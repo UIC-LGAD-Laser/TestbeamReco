@@ -89,7 +89,7 @@ for i in range(1, list_risetime_vs_x.GetXaxis().GetNbins()+1):
     if(nEvents > minEvtsCut):
         tmpHist.Rebin(5)
         
-        myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1*myRMS,myMean+3*myRMS))
+        myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
         myMPV = myLanGausFunction.GetParameter(1)
         value = myMPV
 

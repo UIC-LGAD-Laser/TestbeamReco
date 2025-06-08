@@ -93,6 +93,8 @@ for channel in range(0, len(list_signalOverNoise_vs_x)):
 
         nXBins = th1_Nbins
         minEvtsCut = totalEvents/nXBins
+        if("W9" in dataset):
+            minEvtsCut = 0.2*totalEvents/nXBins
         if i==1: print("Channel %i: nEvents > %.2f (Total events: %i; N bins: %i)"%(channel,minEvtsCut,totalEvents,nXBins))
 
         if(nEvents > minEvtsCut):
@@ -101,7 +103,7 @@ for channel in range(0, len(list_signalOverNoise_vs_x)):
             # tmpHist.Fit(gaussian, "R")
             # myMean = gaussian.GetParameter(1)
             # value = myMean
-            myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1*myRMS,myMean+3*myRMS))
+            myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
             myMPV = myLanGausFunction.GetParameter(1)
             value = myMPV
 
