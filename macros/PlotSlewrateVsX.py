@@ -150,12 +150,28 @@ tempslewRate_vs_x.Draw("hist same")
 
 print("\n")
 temp1=list_slewRate_vs_x[2].GetBinContent(list_slewRate_vs_x[2].FindBin(-0.25))
+error1=list_slewRate_vs_x[2].GetBinError(list_slewRate_vs_x[2].FindBin(-0.25))
 temp2=list_slewRate_vs_x[1].GetBinContent(list_slewRate_vs_x[1].FindBin(-0.25))
+error2=list_slewRate_vs_x[1].GetBinError(list_slewRate_vs_x[1].FindBin(-0.25))
+
+
 temp3=list_slewRate_vs_x[1].GetBinContent(list_slewRate_vs_x[1].FindBin(0.25))
 temp4=list_slewRate_vs_x[0].GetBinContent(list_slewRate_vs_x[0].FindBin(0.25))
 print("Bins: ",list_slewRate_vs_x[2].FindBin(-0.25),list_slewRate_vs_x[1].FindBin(-0.25),list_slewRate_vs_x[1].FindBin(0.25),list_slewRate_vs_x[0].FindBin(0.25))
 print("Mid-gap slewrate = ",temp1,temp2,temp3,temp4)
 print("\nAverage mid-gap slewrate = ",(temp1+temp2+temp3+temp4)/4,"\n")
+
+midgapslewrate = (temp1+temp2)/2
+midgaperror = ((error1 / 2)**2 + (error2 / 2)**2)**0.5
+
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions_paper.txt'
+with open(filename, 'r') as trfile:
+    lines = trfile.readlines()
+with open(filename, 'w') as trfile:
+    for line in lines:
+        if line.startswith(f'{dataset}:'):
+            line = line.strip() + f': {round(midgapslewrate, 2)}, {round(midgaperror, 2)}\n'
+        trfile.write(line)
 
 legend = TLegend(2*myStyle.GetMargin()+0.02,1-myStyle.GetMargin()-0.02-0.2,1-myStyle.GetMargin()-0.02,1-myStyle.GetMargin()-0.02)
 legend.SetNColumns(3)

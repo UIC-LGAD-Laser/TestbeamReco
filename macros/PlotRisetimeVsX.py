@@ -109,6 +109,7 @@ for channel in range(0, len(list_risetime_vs_x)):
             myLanGausFunction = fit.fit(tmpHist, fitrange=(myMean-1.5*myRMS,myMean+3*myRMS))
             myMPV = myLanGausFunction.GetParameter(1)
             value = myMPV
+            error = myLanGausFunction.GetParError(1)  # Get error of MPV parameter
             if (debugMode):
                 tmpHist.Draw("hist")
                 # gaussian.Draw("same") # For Debugging - Gaussian
@@ -116,9 +117,12 @@ for channel in range(0, len(list_risetime_vs_x)):
                 canvas.SaveAs(outdirTmp2+"q_"+str(i)+"_"+str(channel)+".gif")
         else:
             value = tmpHist.GetMean() # Modified for obtaining risetime values for sub-leading channel beyond mid-gap in W9 sensor.
+            error = tmpHist.GetMeanError()
         value = value if(value>0.0) else 0.0
+        error = error if value > 0.0 else 0.0  # Ensure error is 0 if value is 0
 
         list_risetime_vs_x[channel].SetBinContent(i,value)
+        list_risetime_vs_x[channel].SetBinError(i, error)
                     
 # Save risetime histograms
 outputfile = TFile("%sPlotRisetimeVsX.root"%(outdirTmp1),"RECREATE")
@@ -158,12 +162,27 @@ temprisetime_vs_x.Draw("hist same")
 
 print("\n")
 temp1=list_risetime_vs_x[2].GetBinContent(list_risetime_vs_x[2].FindBin(-0.25))
+error1=list_risetime_vs_x[2].GetBinError(list_risetime_vs_x[2].FindBin(-0.25))
 temp2=list_risetime_vs_x[1].GetBinContent(list_risetime_vs_x[1].FindBin(-0.25))
+error2=list_risetime_vs_x[1].GetBinError(list_risetime_vs_x[1].FindBin(-0.25))
+
 temp3=list_risetime_vs_x[1].GetBinContent(list_risetime_vs_x[1].FindBin(0.25))
 temp4=list_risetime_vs_x[0].GetBinContent(list_risetime_vs_x[0].FindBin(0.25))
 print("Bins: ",list_risetime_vs_x[2].FindBin(-0.25),list_risetime_vs_x[1].FindBin(-0.25),list_risetime_vs_x[1].FindBin(0.25),list_risetime_vs_x[0].FindBin(0.25))
 print("Mid-gap risetime = ",temp1,temp2,temp3,temp4)
 print("\nAverage mid-gap risetime = ",(temp1+temp2+temp3+temp4)/4,"\n")
+
+midgrisetime = (temp1+temp2)/2
+midgaperror = ((error1 / 2)**2 + (error2 / 2)**2)**0.5
+
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions_paper.txt'
+with open(filename, 'r') as trfile:
+    lines = trfile.readlines()
+with open(filename, 'w') as trfile:
+    for line in lines:
+        if line.startswith(f'{dataset}:'):
+            line = line.strip() + f': {round(midgrisetime, 2)}, {round(midgaperror, 2)}\n'
+        trfile.write(line)
 
 legend = TLegend(2*myStyle.GetMargin()+0.02,1-myStyle.GetMargin()-0.02-0.2,1-myStyle.GetMargin()-0.02,1-myStyle.GetMargin()-0.02)
 legend.SetNColumns(3)

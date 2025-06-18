@@ -95,6 +95,24 @@ for i in range(1,hist.GetXaxis().GetNbins()+1):
         jitter_vs_x.SetBinContent(i,0)
         jitter_vs_x.SetBinError(i,0)
             
+
+temp3=jitter_vs_x.GetBinContent(jitter_vs_x.FindBin(-0.25))
+error3 = jitter_vs_x.GetBinError(jitter_vs_x.FindBin(-0.25))
+
+print("Bins: ",jitter_vs_x.FindBin(-0.25),jitter_vs_x.FindBin(-0.25))
+print("Mid-gap jitter = ",temp3)
+print("\nAverage mid-gap jitter = ",temp3,"\n")
+
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions_paper.txt'
+with open(filename, 'r') as trfile:
+    lines = trfile.readlines()
+with open(filename, 'w') as trfile:
+    for line in lines:
+        if line.startswith(f'{dataset}:'):
+            line = line.strip() + f': {round(temp3, 2)}, {round(error3, 2)}\n'
+        trfile.write(line)
+
+
 jitter_vs_x.Draw("hist E")
 jitter_vs_x.SetStats(0)
 jitter_vs_x.SetTitle("Weighted jitter vs X")

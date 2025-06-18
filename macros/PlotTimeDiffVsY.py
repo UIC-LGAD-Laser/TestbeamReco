@@ -169,18 +169,22 @@ rightmidgapbin = all_histoInfos[2].th1.FindBin(0.25)
 rightmidgappos = all_histoInfos[2].th1.GetBinCenter(rightmidgapbin)
 
 temp1=all_histoInfos[2].th1.GetBinContent(leftmidgapbin)
+error1 = all_histoInfos[2].th1.GetBinError(leftmidgapbin)
+
 temp2=all_histoInfos[2].th1.GetBinContent(rightmidgapbin)
+error2 = all_histoInfos[2].th1.GetBinError(rightmidgapbin)
+
 print(f'Bins: {leftmidgapbin}(@x={leftmidgappos}), {rightmidgapbin}(@x={rightmidgappos})')
 print("Mid-gap TR = ",temp1,temp2)
 print("\nAverage mid-gap TR = ",(temp1+temp2)/2,"\n")
 
-filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions.txt'
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions_paper.txt'
 if os.path.exists(filename):
     append_write = 'a'
 else:
     append_write = 'w'
 trfile = open(filename,append_write)
-trfile.write(f'{dataset}: {round((temp2),2)}\n')
+trfile.write(f'{dataset}: {round(temp1, 2)}, {round(error1, 2)}, {round(temp2, 2)}, {round(error2, 2)}\n')
 trfile.close()
 
 # Plot 2D histograms

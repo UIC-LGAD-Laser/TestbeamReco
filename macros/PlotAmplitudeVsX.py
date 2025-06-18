@@ -89,11 +89,12 @@ for channel in range(1, len(list_amplitude_vs_x)):
         tmpHist.GetXaxis().SetRangeUser(0,200)
         myMean = tmpHist.GetMean()
         myRMS = tmpHist.GetRMS()
-        value = myMean            
+        value = myMean     
+        error = tmpHist.GetMeanError()        
         nEvents = tmpHist.GetEntries()
 
         nXBins = th1_Nbins
-        minEvtsCut = totalEvents/nXBins*0.75
+        minEvtsCut = totalEvents/nXBins*0.3
         if i==1: print("Channel %i: nEvents > %.2f (Total events: %i; N bins: %i)"%(channel,minEvtsCut,totalEvents,nXBins))
 
         if(nEvents > minEvtsCut):
@@ -107,6 +108,7 @@ for channel in range(1, len(list_amplitude_vs_x)):
             gaussian.SetRange(myMean-1.5*myRMS,myMean+1.5*myRMS)
             tmpHist.Fit(gaussian, "R")
             value = gaussian.GetParameter(1)
+            error = gaussian.GetParError(1)
 
             ##For Debugging
             tmpHist.Draw("hist")
@@ -125,9 +127,12 @@ for channel in range(1, len(list_amplitude_vs_x)):
                 gaussian2.Write()
         else:
             value = 0.0
+            error = 0.0
 
         value = value if(value>0.0) else 0.0
+        error = error if(value>0.0) else 0.0
         list_amplitude_vs_x[channel].SetBinContent(i,value)
+        list_amplitude_vs_x[channel].SetBinError(i, error)
                     
 amplitude_distrib.Close()
 # Save amplitude histograms
@@ -176,19 +181,24 @@ print("\n")
 # print("Mid-gap amplitude = ",temp1,temp2,temp3,temp4)
 # print("\nAverage mid-gap amplitude = ",(temp1+temp2+temp3+temp4)/4,"\n")
 temp3=list_amplitude_vs_x[1].GetBinContent(list_amplitude_vs_x[1].FindBin(0))
+error3 = list_amplitude_vs_x[1].GetBinError(list_amplitude_vs_x[1].FindBin(0))
 temp4=list_amplitude_vs_x[2].GetBinContent(list_amplitude_vs_x[2].FindBin(0))
+error4 = list_amplitude_vs_x[2].GetBinError(list_amplitude_vs_x[2].FindBin(0))
+
 print("Bins: ",list_amplitude_vs_x[1].FindBin(0),list_amplitude_vs_x[2].FindBin(0))
 print("Mid-gap amplitude = ",temp3,temp4)
 print("\nAverage mid-gap amplitude = ",(temp3+temp4)/2,"\n")
 
 midgapamplitude = (temp3+temp4)/2
-filename = '../test/time_resolutions.txt'
+midgaperror = ((error3 / 2)**2 + (error4 / 2)**2)**0.5
+
+filename = '/uscms/home/dshekar/nobackup/laser_analysis/TestbeamReco/test/time_resolutions_paper.txt'
 with open(filename, 'r') as trfile:
     lines = trfile.readlines()
 with open(filename, 'w') as trfile:
     for line in lines:
         if line.startswith(f'{dataset}:'):
-            line = line.strip() + f': {round(midgapamplitude,2)}\n'
+            line = line.strip() + f': {round(midgapamplitude, 2)}, {round(midgaperror, 2)}\n'
         trfile.write(line)
 
 legend = TLegend(2*myStyle.GetMargin()+0.02,1-myStyle.GetMargin()-0.02-0.2,1-myStyle.GetMargin()-0.02,1-myStyle.GetMargin()-0.02)

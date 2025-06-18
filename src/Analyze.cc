@@ -135,6 +135,7 @@ void Analyze::InitHistos(NTupleReader& tr, const std::vector<std::vector<int>>& 
     utility::makeHisto(my_3d_histos,"t1_res_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, timeDiffNbin,timeDiffLow,timeDiffHigh);
     utility::makeHisto(my_3d_histos,"t2_res_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, timeDiffNbin,timeDiffLow,timeDiffHigh);
     utility::makeHisto(my_3d_histos,"jitter1_res_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, 200.0, 0.0, 200.0);
+    utility::makeHisto(my_3d_histos,"jitter2_res_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, 200.0, 0.0, 200.0);
     utility::makeHisto(my_3d_histos,"weighted2_time_tracker_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, 2000,11.0,11.6);
     utility::makeHisto(my_3d_histos,"photektime_vs_xy", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, 2000,11.0,11.6);
     utility::makeHisto(my_3d_histos,"weighted2_timeDiff_tracker_vs_xy_noMetal", "; X [mm]; Y [mm]", std::round((xmax-xmin)/xBinSize),xmin,xmax, (ymax-ymin)/yBinSize,ymin,ymax, timeDiffNbin,timeDiffLow,timeDiffHigh);
@@ -344,6 +345,7 @@ void Analyze::Loop(NTupleReader& tr, int maxevents)
         utility::fillHisto(pass && goodMaxLGADAmp && LaserhitOnMetal, my_3d_histos, "weighted2_timeDiff_tracker_vs_xy_noMetal", x,y,weighted2_time_tracker-photekTime);
         utility::fillHisto(pass && goodMaxLGADAmp,   my_3d_histos, "weighted_jitter_vs_xy", x,y, weighted_jitter);
         utility::fillHisto(pass && goodMaxLGADAmp,   my_3d_histos, "jitter1_res_vs_xy", x,y, jitter1);
+        utility::fillHisto(pass && goodMaxLGADAmp && twoGoodHits,  my_3d_histos, "jitter2_res_vs_xy", x,y, jitter2);
         
         
 

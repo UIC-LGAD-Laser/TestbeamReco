@@ -34,21 +34,24 @@ else:
 map = {'LeCroy_W2_3_2_198V_99P9attn': 'HPK_W2_3_2_50T_1P0_500P_50M_E240_180V', 'LeCroy_W4_17_2_222V_99P9attn': 'HPK_W4_17_2_50T_1P0_500P_50M_C240_204V', 
 'HPK_W5_17_2_205V_94attn': 'HPK_W5_17_2_50T_1P0_500P_50M_E600_190V', 
 'LeCroy_W9_15_2_121V_92P3attn': 'HPK_W9_15_2_20T_1P0_500P_50M_E600_114V'}
-ftbf_dataset = map[dataset]
 
-noise_file = TFile(f'{outdir}/NoiseStudy/PlotNoiseOverallVsX.root')
-noise_hist = noise_file.Get("baselineRMS_vs_x")
-noise_laser = noise_hist.GetBinContent(noise_hist.GetXaxis().FindBin(-0.25))
-noise_laser_error = noise_hist.GetBinError(noise_hist.GetXaxis().FindBin(-0.25))
-noise_file.Close()
-ftbf_noise_file = TFile(f'/uscms/home/dshekar/nobackup/laser_analysis/fnal_TestbeamReco/output/{ftbf_dataset}/Noise/NoiseVsX.root')
-ftbf_noise_hist = ftbf_noise_file.Get("Noise")
-noise_ftbf = ftbf_noise_hist.GetBinContent(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
-noise_ftbf_error = ftbf_noise_hist.GetBinError(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
-ftbf_noise_file.Close()
-scaling_factor = noise_ftbf/noise_laser
-print("Noise from laser at midgap = ", noise_laser)
-print("Noise from ftbf at midgap = ", noise_ftbf)
+if "HPK_W5_17_2" not in dataset:
+    ftbf_dataset = map[dataset]
+    noise_file = TFile(f'{outdir}/NoiseStudy/PlotNoiseOverallVsX.root')
+    noise_hist = noise_file.Get("baselineRMS_vs_x")
+    noise_laser = noise_hist.GetBinContent(noise_hist.GetXaxis().FindBin(-0.25))
+    noise_laser_error = noise_hist.GetBinError(noise_hist.GetXaxis().FindBin(-0.25))
+    noise_file.Close()
+    ftbf_noise_file = TFile(f'/uscms/home/dshekar/nobackup/laser_analysis/fnal_TestbeamReco/output/{ftbf_dataset}/Noise/NoiseVsX.root')
+    ftbf_noise_hist = ftbf_noise_file.Get("Noise")
+    noise_ftbf = ftbf_noise_hist.GetBinContent(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
+    noise_ftbf_error = ftbf_noise_hist.GetBinError(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
+    ftbf_noise_file.Close()
+    scaling_factor = noise_ftbf/noise_laser
+    print("Noise from laser at midgap = ", noise_laser)
+    print("Noise from ftbf at midgap = ", noise_ftbf)
+else:
+    scaling_factor = 1
 
 colors = myStyle.GetColors(True)
 
@@ -79,7 +82,10 @@ for number in range(1, jitter.GetXaxis().GetNbins()+1):
     j = jitter.GetBinContent(number)
     j_error = jitter.GetBinError(number)
     j_scaled = j*scaling_factor
-    j_scaled_error = math.sqrt( (noise_ftbf*j_error/noise_laser)**2 + (j*noise_ftbf_error/noise_laser)**2 + (j*noise_ftbf*noise_laser_error/(noise_laser)**2)**2 )
+    if "HPK_W5_17_2" not in dataset:
+        j_scaled_error = math.sqrt( (noise_ftbf*j_error/noise_laser)**2 + (j*noise_ftbf_error/noise_laser)**2 + (j*noise_ftbf*noise_laser_error/(noise_laser)**2)**2 )
+    else:
+        j_scaled_error = j_error
     x_position = jitter.GetXaxis().GetBinCenter(number)
     bin_number_tr = tr.FindBin(x_position)
     t = tr.GetBinContent(bin_number_tr)
