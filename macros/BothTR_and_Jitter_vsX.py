@@ -42,7 +42,7 @@ if "HPK_W5_17_2" not in dataset:
     noise_laser = noise_hist.GetBinContent(noise_hist.GetXaxis().FindBin(-0.25))
     noise_laser_error = noise_hist.GetBinError(noise_hist.GetXaxis().FindBin(-0.25))
     noise_file.Close()
-    ftbf_noise_file = TFile(f'/uscms/home/dshekar/nobackup/laser_analysis/fnal_TestbeamReco/output/{ftbf_dataset}/Noise/NoiseVsX.root')
+    ftbf_noise_file = TFile(f'/uscms/home/dshekar/nobackup/laser_analysis/fnal_results/TestbeamReco/output/{ftbf_dataset}/Noise/NoiseVsX.root')
     ftbf_noise_hist = ftbf_noise_file.Get("Noise")
     noise_ftbf = ftbf_noise_hist.GetBinContent(ftbf_noise_hist.GetXaxis().FindBin(-0.25))
     noise_ftbf_error = ftbf_noise_hist.GetBinError(ftbf_noise_hist.GetXaxis().FindBin(-0.25))

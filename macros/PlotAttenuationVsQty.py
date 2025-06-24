@@ -6,7 +6,7 @@ import optparse
 import time
 from stripBox import getStripBox
 import myStyle
-
+import numpy as np
 from array import array
 myStyle.ForceStyle()
 
@@ -18,10 +18,12 @@ data_risetime = {}
 data_noise = {}
 data_slewrate = {}
 data_jitter = {}
+data_landau = {}
 data_risetime_tr = {}
 data_noise_tr = {}
 data_slewrate_tr = {}
 data_jitter_tr = {}
+data_landau_tr = {}
 
 data_amp_tr['laser'] = []
 data_amp_tr['ftbf'] = [57.34, 34.53]
@@ -29,6 +31,7 @@ data_risetime_tr['laser'] = []
 data_noise_tr['laser'] = []
 data_slewrate_tr['laser'] = []
 data_jitter_tr['laser'] = []
+data_landau_tr['laser'] = []
 
 with open("time_resolutions_paper.txt", "r") as file:
     for line in file:
@@ -50,6 +53,9 @@ with open("time_resolutions_paper.txt", "r") as file:
             midgap1_jitter_error = float(parts[5].split(",")[1].strip())
             midgap1_slewrate = float(parts[6].split(",")[0].strip())
             midgap1_slewrate_error = float(parts[6].split(",")[1].strip())
+            midgap1_landau = np.sqrt(midgap1_TR**2 - midgap1_jitter**2)
+            midgap1_landau_error = np.sqrt( ((midgap1_TR / np.sqrt(midgap1_TR**2 - midgap1_jitter**2)) * midgap1_TR_error)**2 + ((-midgap1_jitter / np.sqrt(midgap1_TR**2 - midgap1_jitter**2)) * midgap1_jitter_error)**2
+    )
             
             dataset_parts = dataset.split('_')
             bias_voltage = dataset_parts[4][:-1]
@@ -85,13 +91,17 @@ with open("time_resolutions_paper.txt", "r") as file:
             # Save noise vs TR data
             data_noise_tr['laser'].append((midgap1_noise, midgap1_noise_error, midgap1_TR, midgap1_TR_error))
 
-            # Save jitter data
+            # Save jitter and landau data
             if bias_voltage not in data_jitter:
                 data_jitter[bias_voltage] = []
             data_jitter[bias_voltage].append((attenuation, midgap1_jitter, midgap1_jitter_error))
+            if bias_voltage not in data_landau:
+                data_landau[bias_voltage] = []
+            data_landau[bias_voltage].append((attenuation, midgap1_landau, midgap1_landau_error))
             
-            # Save jitter vs TR data
+            # Save jitter and landau vs TR data
             data_jitter_tr['laser'].append((midgap1_jitter, midgap1_jitter_error, midgap1_TR, midgap1_TR_error))
+            data_landau_tr['laser'].append((midgap1_landau, midgap1_landau_error, midgap1_TR, midgap1_TR_error))
 
             # Save slewrate data
             if bias_voltage not in data_slewrate:
@@ -103,7 +113,7 @@ with open("time_resolutions_paper.txt", "r") as file:
 
 colors = [kRed, kBlue, kGreen, kMagenta, kCyan, kOrange]
 plotAttnVsAmp=False
-plotAttnVsTR=False
+plotAttnVsTR=True
 plotAmpVsTR=True
 
 if(plotAttnVsAmp):
@@ -163,57 +173,64 @@ if(plotAttnVsAmp):
     canvas.SaveAs("../attenuation_vs_amplitude_withErrBars.pdf")
 
 if(plotAttnVsTR):
-    canvas2 = TCanvas("c2", "Attenuation vs Time Resolution", 1000, 800)
-    legend = TLegend(0.2, 0.6, 0.5, 0.9)
-    legend.SetHeader("Bias Voltage", "C")
+    canvas2 = TCanvas("c2", "Attenuation vs Qty", 1000, 800)
+    # legend = TLegend(0.2, 0.6, 0.5, 0.9)
+    # legend.SetHeader("Bias Voltage", "C")
     gStyle.SetGridStyle()
     gStyle.SetGridColor(921)  # Set grid line width
     canvas2.SetGridy()
     graphs = []
-    for i, (bias_voltage, points) in enumerate(data_tr.items()):
-        points.sort()  # Sort points by attenuation
-        x = array('d', [p[0] for p in points])
-        x_err = array('d', [0] * len(x))  # Assuming no x-errors
-        y = array('d', [p[1] for p in points])
-        y_err = array('d', [p[2] for p in points])
-        
-        graph = TGraphErrors(len(x), x, y, x_err, y_err)
-        graph.SetMarkerStyle(20)
-        graph.SetMarkerColor(colors[i % len(colors)])
-        graph.SetLineColor(colors[i % len(colors)])
-        graph.SetLineWidth(2)
-        graph.SetTitle(f"")
 
-        if i == 0:
-            graph.Draw("APL")
-            graph.GetXaxis().SetTitle("Attenuation [%]")
-            graph.GetYaxis().SetTitle("Time Resolution [ps]")
-            graph.SetMinimum(20)  # Set the minimum value for the y-axis
-            graph.SetMaximum(36)
-            # graph.GetXaxis().SetTitleSize(0.05)
-            # graph.GetYaxis().SetTitleSize(0.05)
-            # graph.GetXaxis().SetLabelSize(0.04)
-            # graph.GetYaxis().SetLabelSize(0.04)
-            graph.GetYaxis().SetTitleOffset(1.2)
-        else:
-            graph.Draw("PL same")
-        
-        legend.AddEntry(graph, f"{bias_voltage}V", "PL")
-        graphs.append(graph)
-    # title = TPaveText(0.2, 0.91, 0.8, 1.0, "NDC")
-    # title.AddText("Mid-gap time resolution vs attenuation")
-    # title.AddText("for different operating voltages")
-    # title.SetTextSize(0.04)  # Set the title font size
-    # title.SetTextAlign(22)  # Center align
-    # title.SetFillStyle(0)  # No fill color
-    # title.Draw()
-    legend.SetTextFont(myStyle.GetFont())
-    legend.SetTextSize(myStyle.GetSize())
-    legend.SetFillColor(kWhite)
-    legend.SetFillStyle(4050)#
-    legend.SetBorderSize(1)
-    legend.Draw()
-    canvas2.SaveAs("../attenuation_vs_time_resolution_withErrBars.pdf")
+    quantities = [
+        ("Time Resolution", data_tr, data_amp, "../TempAttenuation_vs_time_resolution_withErrBars.pdf", 20, 40, 'ps', [0.35, 0.6, 0.64, 0.9]),
+        ("Noise", data_noise, data_amp, "../TempAttenuation_vs_noise_withErrBars.pdf", 1.5, 2.0, 'mV', [0.45, 0.2, 0.74, 0.5]),
+        ("Risetime", data_risetime, data_amp, "../TempAttenuation_vs_risetime_withErrBars.pdf", 700, 800, 'ps', [0.45, 0.2, 0.74, 0.5]),
+        ("Jitter", data_jitter, data_amp, "../TempAttenuation_vs_jitter_withErrBars.pdf", 10, 30, 'ps', [0.15, 0.6, 0.44, 0.9]),
+        ("Landau", data_landau, data_amp, "../TempAttenuation_vs_landau_withErrBars.pdf", 10, 30, 'ps', [0.45, 0.6, 0.74, 0.9]),
+        ("Slewrate", data_slewrate, data_amp, "../TempAttenuation_vs_slewrate_withErrBars.pdf", 30, 120, 'mV/ps', [0.55, 0.6, 0.84, 0.9]),
+    ]
+
+
+    for qty_name, qty_data, amp_data, output_file, y_min, y_max, units, legendLimits in quantities:
+        # legend.Clear()
+        graphs.clear()
+        # y_offset = 0.0 if "Resolution" in qty_name or "Jitter" in qty_name or "Landau" in qty_name or "Slewrate" in qty_name else -0.4
+        legend = TLegend(legendLimits[0], legendLimits[1], legendLimits[2], legendLimits[3])
+        legend.SetHeader("Bias Voltage", "C")
+
+        for i, (bias_voltage, points) in enumerate(qty_data.items()):
+            points.sort()  # Sort points by attenuation
+            x = array('d', [p[0] for p in points])
+            x_err = array('d', [0] * len(x))  # Assuming no x-errors
+            y = array('d', [p[1] for p in points])
+            y_err = array('d', [p[2] for p in points])
+            
+            graph = TGraphErrors(len(x), x, y, x_err, y_err)
+            graph.SetMarkerStyle(20)
+            graph.SetMarkerColor(colors[i % len(colors)])
+            graph.SetLineColor(colors[i % len(colors)])
+            graph.SetLineWidth(2)
+            graph.SetTitle(f"")
+            graph.GetXaxis().SetLimits(91, 95)
+            graph.SetMinimum(y_min)
+            graph.SetMaximum(y_max)
+            
+            legend.AddEntry(graph, f"{bias_voltage}V", "PL")
+            graphs.append(graph)
+            if i == 0:
+                graph.Draw("APL")
+                graph.GetXaxis().SetTitle("Attenuation [%]")
+                graph.GetYaxis().SetTitle(f"{qty_name} [{units}]")
+                graph.GetYaxis().SetTitleOffset(1.2)
+            else:
+                graph.Draw("PL same")
+        legend.SetTextFont(myStyle.GetFont())
+        legend.SetTextSize(myStyle.GetSize()-6)
+        legend.SetFillColor(kWhite)
+        legend.SetFillStyle(4050)#
+        legend.SetBorderSize(1)
+        legend.Draw()
+        canvas2.SaveAs(output_file)            
 
 if(plotAmpVsTR):
     canvas = TCanvas("c3", "Plots", 1000, 800)
@@ -228,13 +245,14 @@ if(plotAmpVsTR):
         ("Noise", data_noise, data_amp, "../amplitude_vs_noise_withErrBars.pdf", 1.5, 2.0, 'mV'),
         ("Risetime", data_risetime, data_amp, "../amplitude_vs_risetime_withErrBars.pdf", 700, 800, 'ps'),
         ("Jitter", data_jitter, data_amp, "../amplitude_vs_jitter_withErrBars.pdf", 10, 30, 'ps'),
+        ("Landau", data_landau, data_amp, "../amplitude_vs_landau_withErrBars.pdf", 10, 30, 'ps'),
         ("Slewrate", data_slewrate, data_amp, "../amplitude_vs_slewrate_withErrBars.pdf", 30, 120, 'mV/ps'),
     ]
 
     for qty_name, qty_data, amp_data, output_file, y_min, y_max, units in quantities:
         # legend.Clear()
         graphs.clear()
-        y_offset = 0.0 if "Resolution" in qty_name or "Jitter" in qty_name else -0.4
+        y_offset = 0.0 if "Resolution" in qty_name or "Jitter" in qty_name or "Landau" in qty_name else -0.4
         x_offset = -0.1 if "Resolution" in qty_name  else 0.0
         legend = TLegend(0.45+x_offset, 0.6+y_offset, 0.94+x_offset, 0.9+y_offset)
         legend.SetHeader("Bias Voltage", "C")
@@ -300,6 +318,9 @@ if(plotAmpVsTR):
         legend.Draw()
 
         canvas.SaveAs(output_file)
+
+
+
 
 # if(plotAmpVsTR):
 
