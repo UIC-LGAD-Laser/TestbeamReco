@@ -112,7 +112,7 @@ with open("time_resolutions_paper.txt", "r") as file:
             data_slewrate_tr['laser'].append((midgap1_slewrate, midgap1_slewrate_error, midgap1_TR, midgap1_TR_error))
 
 colors = [kRed, kBlue, kGreen, kMagenta, kCyan, kOrange]
-plotAttnVsAmp=False
+plotAttnVsAmp=True
 plotAttnVsTR=True
 plotAmpVsTR=True
 
@@ -170,6 +170,7 @@ if(plotAttnVsAmp):
     legend.SetBorderSize(1)
     
     legend.Draw()
+    myStyle.SensorInfo(sensor="Sensor: S3")
     canvas.SaveAs("../attenuation_vs_amplitude_withErrBars.pdf")
 
 if(plotAttnVsTR):
@@ -182,12 +183,12 @@ if(plotAttnVsTR):
     graphs = []
 
     quantities = [
-        ("Time Resolution", data_tr, data_amp, "../TempAttenuation_vs_time_resolution_withErrBars.pdf", 20, 40, 'ps', [0.35, 0.6, 0.64, 0.9]),
-        ("Noise", data_noise, data_amp, "../TempAttenuation_vs_noise_withErrBars.pdf", 1.5, 2.0, 'mV', [0.45, 0.2, 0.74, 0.5]),
-        ("Risetime", data_risetime, data_amp, "../TempAttenuation_vs_risetime_withErrBars.pdf", 700, 800, 'ps', [0.45, 0.2, 0.74, 0.5]),
-        ("Jitter", data_jitter, data_amp, "../TempAttenuation_vs_jitter_withErrBars.pdf", 10, 30, 'ps', [0.15, 0.6, 0.44, 0.9]),
-        ("Landau", data_landau, data_amp, "../TempAttenuation_vs_landau_withErrBars.pdf", 10, 30, 'ps', [0.45, 0.6, 0.74, 0.9]),
-        ("Slewrate", data_slewrate, data_amp, "../TempAttenuation_vs_slewrate_withErrBars.pdf", 30, 120, 'mV/ps', [0.55, 0.6, 0.84, 0.9]),
+        ("Time Resolution", data_tr, data_amp, "../attenuation_vs_time_resolution_withErrBars.pdf", 20, 40, 'ps', [0.35, 0.6, 0.64, 0.9]),
+        ("Noise", data_noise, data_amp, "../attenuation_vs_noise_withErrBars.pdf", 1.5, 2.0, 'mV', [0.45, 0.2, 0.74, 0.5]),
+        ("Risetime", data_risetime, data_amp, "../attenuation_vs_risetime_withErrBars.pdf", 700, 800, 'ps', [0.45, 0.2, 0.74, 0.5]),
+        ("Jitter", data_jitter, data_amp, "../attenuation_vs_jitter_withErrBars.pdf", 10, 30, 'ps', [0.15, 0.6, 0.44, 0.9]),
+        ("Landau", data_landau, data_amp, "../attenuation_vs_landau_withErrBars.pdf", 10, 30, 'ps', [0.15, 0.6, 0.60, 0.9]),
+        ("Slewrate", data_slewrate, data_amp, "../attenuation_vs_slewrate_withErrBars.pdf", 30, 120, 'mV/ps', [0.55, 0.6, 0.84, 0.9]),
     ]
 
 
@@ -198,6 +199,10 @@ if(plotAttnVsTR):
         legend = TLegend(legendLimits[0], legendLimits[1], legendLimits[2], legendLimits[3])
         legend.SetHeader("Bias Voltage", "C")
 
+        all_landau_x = []
+        all_landau_y = []
+        all_landau_x_err = []
+        all_landau_y_err = []
         for i, (bias_voltage, points) in enumerate(qty_data.items()):
             points.sort()  # Sort points by attenuation
             x = array('d', [p[0] for p in points])
@@ -215,7 +220,20 @@ if(plotAttnVsTR):
             graph.SetMinimum(y_min)
             graph.SetMaximum(y_max)
             
-            legend.AddEntry(graph, f"{bias_voltage}V", "PL")
+            if "Landau" in qty_name:  # Fit with a linear equation if "Landau" is in qty_name
+                fit_function = TF1(f"fit_{bias_voltage}", "[0]*x + [1]", 91, 95)
+                fit_function.SetLineStyle(2)
+                fit_function.SetLineColor(colors[i % len(colors)])
+                graph.Fit(fit_function, "R")
+                param0 = fit_function.GetParameter(0)
+                param1 = fit_function.GetParameter(1)
+                legend.AddEntry(graph, f"{bias_voltage}V (fit: {param0:.2f}*x {param1:.1f})", "PL")
+                all_landau_x.extend(x)
+                all_landau_y.extend(y)
+                all_landau_x_err.extend(x_err)
+                all_landau_y_err.extend(y_err)
+            else:
+                legend.AddEntry(graph, f"{bias_voltage}V", "PL")
             graphs.append(graph)
             if i == 0:
                 graph.Draw("APL")
@@ -224,6 +242,13 @@ if(plotAttnVsTR):
                 graph.GetYaxis().SetTitleOffset(1.2)
             else:
                 graph.Draw("PL same")
+        if "Landau" in qty_name:
+            global_fit_function = TF1("global_fit", "[0]*x + [1]", 91, 95)
+            global_graph = TGraphErrors(len(all_landau_x), array('d',all_landau_x), array('d',all_landau_y), array('d',all_landau_x_err), array('d',all_landau_y_err))
+            global_graph.Fit(global_fit_function, "R")
+            param0 = global_fit_function.GetParameter(0)
+            param1 = global_fit_function.GetParameter(1)
+            legend.AddEntry(global_graph, f"Global fit: {param0:.2f}*x {param1:.1f}", "L")
         legend.SetTextFont(myStyle.GetFont())
         legend.SetTextSize(myStyle.GetSize()-6)
         legend.SetFillColor(kWhite)
@@ -257,6 +282,10 @@ if(plotAmpVsTR):
         legend = TLegend(0.45+x_offset, 0.6+y_offset, 0.94+x_offset, 0.9+y_offset)
         legend.SetHeader("Bias Voltage", "C")
 
+        all_landau_x = []
+        all_landau_y = []
+        all_landau_x_err = []
+        all_landau_y_err = []
         for i, bias_voltage in enumerate(qty_data.keys()):
             if bias_voltage not in amp_data:
                 continue
@@ -292,11 +321,22 @@ if(plotAmpVsTR):
                 fit_function.SetLineStyle(2)
                 fit_function.SetLineColor(colors[i % len(colors)])
                 graph.Fit(fit_function, "R")
-
                 param0 = fit_function.GetParameter(0)
                 param1 = fit_function.GetParameter(1)
-
                 legend.AddEntry(graph, f"{bias_voltage}V (fit: {param0:.1f}/x + {param1:.1f})", "PL")
+            elif "Landau" in qty_name:  # Fit with a linear equation if the condition is met
+                fit_function = TF1(f"fit_{bias_voltage}", "[0]*x + [1]", 30, 115)
+                fit_function.SetLineStyle(2)
+                fit_function.SetLineColor(colors[i % len(colors)])
+                graph.Fit(fit_function, "R")
+                param0 = fit_function.GetParameter(0)
+                param1 = fit_function.GetParameter(1)
+                legend.AddEntry(graph, f"{bias_voltage}V (fit: {param0:.2f}*x + {param1:.1f})", "PL")
+
+                all_landau_x.extend(x)
+                all_landau_y.extend(y)
+                all_landau_x_err.extend(x_err)
+                all_landau_y_err.extend(y_err)
             else:
                 legend.AddEntry(graph, f"{bias_voltage}V", "PL")
 
@@ -309,78 +349,18 @@ if(plotAmpVsTR):
                 graph.Draw("PL same")
 
             graphs.append(graph)
-        
+        if "Landau" in qty_name:
+            global_fit_function = TF1("global_fit", "[0]*x + [1]", 91, 95)
+            global_graph = TGraphErrors(len(all_landau_x), array('d',all_landau_x), array('d',all_landau_y), array('d',all_landau_x_err), array('d',all_landau_y_err))
+            global_graph.Fit(global_fit_function, "R")
+            param0 = global_fit_function.GetParameter(0)
+            param1 = global_fit_function.GetParameter(1)
+            legend.AddEntry(global_graph, f"Global fit: {param0:.2f}*x + {param1:.1f}", "L")
         legend.SetTextFont(myStyle.GetFont())
         legend.SetTextSize(myStyle.GetSize()-6)
         legend.SetFillColor(kWhite)
         legend.SetFillStyle(4050)
         legend.SetBorderSize(1)
         legend.Draw()
-
+        myStyle.SensorInfo(sensor="Sensor: S3")
         canvas.SaveAs(output_file)
-
-
-
-
-# if(plotAmpVsTR):
-
-#     canvas = TCanvas("c3", "Amplitude vs Time Resolution", 1000, 800)
-#     # canvas.SetBottomMargin(0.15)
-#     # Extract data for laser
-#     laser_data = data_amp_tr['laser']
-#     laser_data.sort()  # Sort by the first element (amplitude) in each tuple
-#     gStyle.SetGridStyle()
-#     gStyle.SetGridColor(921)  # Set grid line width
-#     canvas.SetGridy()
-#     x_laser = array('d', [point[0] for point in laser_data])
-#     y_laser = array('d', [point[1] for point in laser_data])
-
-#     # Create a graph for laser data
-#     graph_laser = TGraph(len(x_laser), x_laser, y_laser)
-#     graph_laser.SetMarkerStyle(20)
-#     graph_laser.SetMarkerColor(kBlue)
-#     graph_laser.SetLineColor(kBlue)
-#     graph_laser.SetLineWidth(2)
-#     graph_laser.SetTitle("")
-#     graph_laser.GetXaxis().SetTitle("Mid-gap amplitude [mV]")
-#     graph_laser.GetYaxis().SetTitle("Time Resolution [ps]")
-#     # graph_laser.GetXaxis().SetTitleSize(0.05)
-#     # graph_laser.GetYaxis().SetTitleSize(0.05)
-#     # graph_laser.GetXaxis().SetLabelSize(0.04)
-#     # graph_laser.GetYaxis().SetLabelSize(0.04)
-#     graph.GetYaxis().SetTitleOffset(1.2)
-#     graph_laser.Draw("APL")
-
-#     # Extract data for ftbf
-#     ftbf_data = data_amp_tr['ftbf']
-#     x_ftbf = array('d', [ftbf_data[0]])
-#     y_ftbf = array('d', [ftbf_data[1]])
-
-#     # # Create a graph for ftbf data
-#     # graph_ftbf = TGraph(1, x_ftbf, y_ftbf)
-#     # graph_ftbf.SetMarkerStyle(29)
-#     # graph_ftbf.SetMarkerColor(kRed)
-#     # graph_ftbf.SetMarkerSize(2.5)
-#     # graph_ftbf.SetLineColor(kRed)
-#     # graph_ftbf.SetLineWidth(2)
-#     # graph_ftbf.Draw("P same")
-
-#     # Create a legend
-#     legend = TLegend(0.5, 0.6, 0.8, 0.8)
-#     legend.AddEntry(graph_laser, "Laser source", "PL")
-#     # legend.AddEntry(graph_ftbf, "MIP source", "P")
-#     legend.SetTextFont(myStyle.GetFont())
-#     legend.SetTextSize(myStyle.GetSize())
-#     legend.SetFillColor(kWhite)
-#     legend.SetFillStyle(4050)#
-#     legend.SetBorderSize(1)
-#     legend.Draw()
-#     # title = TPaveText(0.2, 0.91, 0.8, 1.0, "NDC")
-#     # title.AddText("Mid-gap amplitude vs time resolution")
-#     # title.SetTextSize(0.04)  # Set the title font size
-#     # title.SetTextAlign(22)  # Center align
-#     # title.SetFillStyle(0)  # No fill color
-#     # title.Draw()
-
-#     # Save the canvas
-#     canvas.SaveAs("../amplitude_vs_time_resolution.pdf")

@@ -57,7 +57,7 @@ outdir=""
 outdir = myStyle.getOutputDir(dataset)
 inputfile = TFile("%s%s_Analyze.root"%(outdir,dataset))
 
-
+tracker_contribution = 0.0
 map = {'LeCroy_W2_3_2_198V_99P9attn': 'HPK_W2_3_2_50T_1P0_500P_50M_E240_180V', 'LeCroy_W4_17_2_222V_99P9attn': 'HPK_W4_17_2_50T_1P0_500P_50M_C240_204V', 
 'HPK_W5_17_2_205V_94attn': 'HPK_W5_17_2_50T_1P0_500P_50M_E600_190V', 
 'LeCroy_W9_15_2_121V_92P3attn': 'HPK_W9_15_2_20T_1P0_500P_50M_E600_114V'}
@@ -264,9 +264,9 @@ for i in range(hist_info_twoStrip.th2.GetXaxis().FindBin(-0.5), hist_info_twoStr
             #     oneStripHist.SetBinContent(i, -10.0)
 
         # Removing tracker's contribution of 5 microns
-        if value>2.0:
-            error = error*value/TMath.Sqrt(value*value - 2*2)
-            value = TMath.Sqrt(value*value - 2*2)
+        if value>tracker_contribution:
+            error = error*value/TMath.Sqrt(value*value - tracker_contribution*tracker_contribution)
+            value = TMath.Sqrt(value*value - tracker_contribution*tracker_contribution)
         # elif value<0.0:
         #     value = 2.0 # to check if there are strange resolution values
         #     error = 2.0
@@ -280,7 +280,7 @@ for i in range(hist_info_twoStrip.th2.GetXaxis().FindBin(-0.5), hist_info_twoStr
         #     error = 0.0
         #     expected_res_vs_x.SetBinContent(i,-10)
 
-        if (is_hotspot and hist_twoStrip_fullSnsr.GetBinContent(i)<2.0):
+        if (is_hotspot and hist_twoStrip_fullSnsr.GetBinContent(i)<tracker_contribution):
             value = -10.0
             error = 0
 
@@ -316,7 +316,7 @@ binary_readout_res_sensor.SetLineStyle(7)
 binary_readout_res_sensor.SetLineColor(colors[4]) #kGreen+2 #(TColor.GetColor(136,34,85))
 
 # Plot 2D histograms
-outputfile = TFile("%sPlotCompareXRes%s.root"%(outdir,pref_hotspot),"RECREATE")
+outputfile = TFile("%sPlotCompareXRes%s_trackerSubtraction%s.root"%(outdir,pref_hotspot,str(tracker_contribution)),"RECREATE")
 # for info in all_histoInfos:
 htemp = TH1F("htemp","",1,-xlength,xlength)
 htemp.SetStats(0)
